@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, setIcon } from "obsidian";
+import { ItemView, WorkspaceLeaf, MarkdownRenderer } from "obsidian";
 import { VIEW_TYPE_MY_TODOS, Todo } from "./types";
 import { TodoIndex } from "./todoIndex";
 
@@ -92,29 +92,8 @@ export class MyTodosView extends ItemView {
         });
 
         const text = li.createSpan({ cls: "notepack-todo-text" });
-        this.renderTodoText(text, todo.text);
+        MarkdownRenderer.renderMarkdown(todo.text, text, todo.file.path, this);
       }
-    }
-  }
-
-  /**
-   * Render todo text with @mentions highlighted.
-   */
-  private renderTodoText(el: HTMLElement, text: string): void {
-    const mentionPattern = /@[A-Za-z.]+/g;
-    let lastIndex = 0;
-    let match: RegExpExecArray | null;
-
-    while ((match = mentionPattern.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        el.appendText(text.substring(lastIndex, match.index));
-      }
-      el.createSpan({ text: match[0], cls: "notepack-mention" });
-      lastIndex = match.index + match[0].length;
-    }
-
-    if (lastIndex < text.length) {
-      el.appendText(text.substring(lastIndex));
     }
   }
 

@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf } from "obsidian";
+import { ItemView, WorkspaceLeaf, MarkdownRenderer } from "obsidian";
 import { VIEW_TYPE_TEAM_TODOS, Todo, NotePackSettings } from "./types";
 import { TodoIndex } from "./todoIndex";
 import { getTeamMembers } from "./team";
@@ -155,7 +155,7 @@ export class TeamTodosView extends ItemView {
         const text = li.createSpan({ cls: "notepack-todo-text" });
         // Strip the @mention prefix since we show the assignee separately
         const cleanText = todo.text.replace(/^@[A-Za-z.]+\s*/, "");
-        text.setText(cleanText);
+        MarkdownRenderer.renderMarkdown(cleanText, text, todo.file.path, this);
       }
     }
   }
