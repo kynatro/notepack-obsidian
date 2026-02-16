@@ -1,0 +1,21 @@
+{
+  "name": "notepack-obsidian",
+  "version": "1.0.0",
+  "description": "NotePack plugin for Obsidian - Todo collation with team management",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+  },
+  "keywords": ["obsidian", "notepack", "todos", "team"],
+  "author": "Dave Shepard",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "0.17.3",
+    "obsidian": "latest",
+    "tslib": "2.6.2",
+    "typescript": "5.3.3"
+  }
+}
