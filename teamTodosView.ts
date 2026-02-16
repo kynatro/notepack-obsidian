@@ -1,7 +1,7 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
-import { VIEW_TYPE_TEAM_TODOS, Todo, NotePackSettings } from "../types";
-import { TodoIndex } from "../todoIndex";
-import { getTeamMembers } from "../team";
+import { VIEW_TYPE_TEAM_TODOS, Todo, NotePackSettings } from "./types";
+import { TodoIndex } from "./todoIndex";
+import { getTeamMembers } from "./team";
 
 export class TeamTodosView extends ItemView {
   private todoIndex: TodoIndex;

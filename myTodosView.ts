@@ -1,6 +1,6 @@
 import { ItemView, WorkspaceLeaf, setIcon } from "obsidian";
-import { VIEW_TYPE_MY_TODOS, Todo } from "../types";
-import { TodoIndex } from "../todoIndex";
+import { VIEW_TYPE_MY_TODOS, Todo } from "./types";
+import { TodoIndex } from "./todoIndex";
 
 export class MyTodosView extends ItemView {
   private todoIndex: TodoIndex;

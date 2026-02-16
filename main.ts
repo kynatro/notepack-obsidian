@@ -9,9 +9,9 @@ import {
 import { TodoIndex } from "./todoIndex";
 import { TodoExporter } from "./exporter";
 import { NotePackSettingTab } from "./settings";
-import { MyTodosView } from "./views/myTodosView";
-import { TeamTodosView } from "./views/teamTodosView";
-import { RecentFilesView } from "./views/recentFilesView";
+import { MyTodosView } from "./myTodosView";
+import { TeamTodosView } from "./teamTodosView";
+import { RecentFilesView } from "./recentFilesView";
 import { TeamMemberModal } from "./teamMemberModal";
 
 export default class NotePackPlugin extends Plugin {
