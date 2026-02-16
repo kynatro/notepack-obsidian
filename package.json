@@ -2,7 +2,7 @@
   "name": "notepack-obsidian",
   "version": "1.0.0",
   "description": "NotePack plugin for Obsidian - Todo collation with team management",
-  "main": "main.js",
+  "main": "dist/main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
