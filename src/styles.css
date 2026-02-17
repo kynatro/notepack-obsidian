@@ -84,6 +84,10 @@
   flex: 1;
 }
 
+.notepack-todo-text p {
+  margin: 0;
+}
+
 .notepack-mention {
   color: var(--text-accent);
   font-weight: 600;

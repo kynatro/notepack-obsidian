@@ -92,7 +92,7 @@ export class TodoIndex {
       return;
     }
 
-    this.indexFile(file, cache);
+    this.indexFile(file, cache, _data);
     this.notify();
   }
 
@@ -197,7 +197,7 @@ export class TodoIndex {
   /**
    * Index a single file by reading its cache (or fetching it).
    */
-  private indexFile(file: TFile, cache?: CachedMetadata): void {
+  private indexFile(file: TFile, cache?: CachedMetadata, data?: string): void {
     const fileCache =
       cache || this.app.metadataCache.getFileCache(file);
 
@@ -215,9 +215,8 @@ export class TodoIndex {
       return;
     }
 
-    // Get the file content from the cache's sections to extract actual text
-    // We need the raw content for the todo text and @mention parsing
-    const content = this.getCachedContent(file);
+    // Use provided data, or fall back to sync read
+    const content = data ?? this.getCachedContent(file);
     if (content === null) {
       // File content not available yet; skip and it will be indexed on next change
       this.index.set(file.path, []);

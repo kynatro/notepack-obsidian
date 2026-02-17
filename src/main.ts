@@ -1,4 +1,4 @@
-import { Plugin, TFile, TAbstractFile, WorkspaceLeaf, debounce } from "obsidian";
+import { Plugin, TFile, TAbstractFile, WorkspaceLeaf, CachedMetadata, debounce } from "obsidian";
 import {
   NotePackSettings,
   DEFAULT_SETTINGS,
@@ -30,9 +30,8 @@ export default class NotePackPlugin extends Plugin {
 
     // Debounced handler for file changes
     this.debouncedUpdate = debounce(
-      (file: TFile) => {
-        const cache = this.app.metadataCache.getFileCache(file);
-        this.todoIndex.updateFile(file, undefined, cache ?? undefined);
+      (file: TFile, data: string, cache: CachedMetadata) => {
+        this.todoIndex.updateFile(file, data, cache);
       },
       this.settings.debounceMs,
       true
@@ -140,8 +139,8 @@ export default class NotePackPlugin extends Plugin {
 
     // Incremental updates on file change
     this.registerEvent(
-      this.app.metadataCache.on("changed", (file) => {
-        this.debouncedUpdate(file);
+      this.app.metadataCache.on("changed", (file, data, cache) => {
+        this.debouncedUpdate(file, data, cache);
       })
     );
 
@@ -196,9 +195,8 @@ export default class NotePackPlugin extends Plugin {
 
     // Update debounce timing
     this.debouncedUpdate = debounce(
-      (file: TFile) => {
-        const cache = this.app.metadataCache.getFileCache(file);
-        this.todoIndex.updateFile(file, undefined, cache ?? undefined);
+      (file: TFile, data: string, cache: CachedMetadata) => {
+        this.todoIndex.updateFile(file, data, cache);
       },
       this.settings.debounceMs,
       true
