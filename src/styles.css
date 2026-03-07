@@ -146,6 +146,7 @@
 .notepack-due-badge {
   font-size: 0.72em;
   font-weight: 600;
+  text-transform: uppercase;
   border-radius: 4px;
   padding: 1px 6px;
   flex-shrink: 0;
@@ -154,23 +155,23 @@
 }
 
 .notepack-due-overdue {
-  background-color: #b91c1c;
-  color: #fff;
+  background-color: var(--color-red);
+  color: var(--text-on-accent);
 }
 
 .notepack-due-today {
-  background-color: #c2410c;
-  color: #fff;
+  background-color: var(--color-orange);
+  color: var(--text-on-accent);
 }
 
 .notepack-due-soon {
-  background-color: #166534;
-  color: #fff;
+  background-color: var(--color-green);
+  color: var(--text-on-accent);
 }
 
 .notepack-due-future {
-  background-color: #475569;
-  color: #fff;
+  background-color: var(--tag-background);
+  color: var(--tag-color);
 }
 
 /* ============================================================
@@ -193,13 +194,13 @@
 }
 
 .notepack-section-overdue .notepack-urgency-header {
-  background-color: #b91c1c;
-  color: #fff;
+  background-color: var(--color-red);
+  color: var(--text-on-accent);
 }
 
 .notepack-section-due-soon .notepack-urgency-header {
-  background-color: #c2410c;
-  color: #fff;
+  background-color: var(--color-orange);
+  color: var(--text-on-accent);
 }
 
 .notepack-urgency-section .notepack-group {
