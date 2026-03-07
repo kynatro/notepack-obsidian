@@ -5,16 +5,26 @@
   "main": "dist/main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
-  "keywords": ["obsidian", "notepack", "todos", "team"],
+  "keywords": [
+    "obsidian",
+    "notepack",
+    "todos",
+    "team"
+  ],
   "author": "Dave Shepard",
   "license": "MIT",
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.11.0",
     "builtin-modules": "^3.3.0",
     "esbuild": "0.17.3",
+    "jest": "^30.2.0",
     "obsidian": "latest",
+    "ts-jest": "^29.4.6",
     "tslib": "2.6.2",
     "typescript": "5.3.3"
   }
