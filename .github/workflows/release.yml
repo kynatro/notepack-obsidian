@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Read version
+        id: version
+        run: echo "version=$(node -p "require('./src/manifest.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        run: |
+          VERSION="v${{ steps.version.outputs.version }}"
+          PREV_TAG=$(git tag --sort=-version:refname | grep -v "^${VERSION}$" | head -1)
+
+          if [ -z "$PREV_TAG" ]; then
+            HEADER="## Initial Release"
+            LOG=$(git log --pretty=format:"- %s (%an)" --no-merges)
+          else
+            HEADER="## Changes since ${PREV_TAG}"
+            LOG=$(git log --pretty=format:"- %s (%an)" --no-merges "${PREV_TAG}..HEAD")
+          fi
+
+          {
+            echo "${HEADER}"
+            echo ""
+            if [ -z "$LOG" ]; then
+              echo "- No changes"
+            else
+              echo "${LOG}"
+            fi
+          } > RELEASE_NOTES.md
+
+      - name: Create ZIP
+        run: zip -j "notepack-obsidian-${{ steps.version.outputs.version }}.zip" dist/*
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="v${{ steps.version.outputs.version }}"
+
+          # Remove existing release and tag so we can publish a fresh one
+          gh release delete "$VERSION" --yes 2>/dev/null || true
+          git push origin ":refs/tags/$VERSION" 2>/dev/null || true
+
+          gh release create "$VERSION" \
+            --title "NotePack ${VERSION}" \
+            --notes-file RELEASE_NOTES.md \
+            --latest \
+            "notepack-obsidian-${{ steps.version.outputs.version }}.zip"
