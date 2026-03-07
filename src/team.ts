@@ -29,6 +29,7 @@ export function getTeamMembers(app: App, settings: NotePackSettings): TeamMember
 
   for (const child of teamFolder.children) {
     if (!(child instanceof TFolder)) continue;
+    if (child.path.toLowerCase().includes("archive")) continue;
 
     const name = child.name;
     const readmePath = `${child.path}/README.md`;
