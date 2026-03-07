@@ -136,6 +136,52 @@ export class NotePackSettingTab extends PluginSettingTab {
           })
       );
 
+    containerEl.createEl("h3", { text: "Due Dates" });
+
+    new Setting(containerEl)
+      .setName("End of day")
+      .setDesc(
+        'The time at which "end of day" (EOD) due dates are considered overdue. Defaults to 5:00 PM.'
+      )
+      .addDropdown((dropdown) => {
+        const options: Record<string, string> = {};
+        for (let h = 0; h < 24; h++) {
+          const suffix = h < 12 ? "AM" : "PM";
+          const display = h === 0 ? "12:00 AM" : h < 12 ? `${h}:00 AM` : h === 12 ? "12:00 PM" : `${h - 12}:00 PM`;
+          options[String(h)] = display;
+        }
+        dropdown
+          .addOptions(options)
+          .setValue(String(this.plugin.settings.endOfDayHour))
+          .onChange(async (value) => {
+            this.plugin.settings.endOfDayHour = parseInt(value);
+            await this.plugin.saveSettings();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName("End of week")
+      .setDesc(
+        'The last day of the work week for "end of week" (EOW) due dates. Defaults to Saturday.'
+      )
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOptions({
+            "0": "Sunday",
+            "1": "Monday",
+            "2": "Tuesday",
+            "3": "Wednesday",
+            "4": "Thursday",
+            "5": "Friday",
+            "6": "Saturday",
+          })
+          .setValue(String(this.plugin.settings.endOfWeekDay))
+          .onChange(async (value) => {
+            this.plugin.settings.endOfWeekDay = parseInt(value);
+            await this.plugin.saveSettings();
+          })
+      );
+
     containerEl.createEl("h3", { text: "Performance" });
 
     new Setting(containerEl)

@@ -1,6 +1,7 @@
 import { App, TFile, CachedMetadata } from "obsidian";
 import { Todo, NotePackSettings } from "./types";
 import { formatAlias, getTeamMemberAliases } from "./team";
+import { parseDueDate, parseDateString } from "./dueDateParser";
 
 /**
  * TodoIndex maintains an in-memory map of all unchecked todos across the vault.
@@ -224,6 +225,8 @@ export class TodoIndex {
     }
 
     const lines = content.split("\n");
+    const fileDate = this.extractFileDate(file.name);
+    const refDate = fileDate ? parseDateString(fileDate) : new Date();
 
     for (const item of listItems) {
       // Only unchecked tasks (task === ' ' or task === undefined with checkbox)
@@ -239,7 +242,6 @@ export class TodoIndex {
       const rawText = todoMatch[1].trim();
       const assignedTo = this.getAssignment(rawText);
       const assignedToAlias = this.resolveAlias(assignedTo);
-      const fileDate = this.extractFileDate(file.name);
 
       todos.push({
         id: this.nextId++,
@@ -251,6 +253,7 @@ export class TodoIndex {
         fileMtime: file.stat.mtime,
         fileDate,
         lineNumber: lineNum,
+        dueDate: parseDueDate(rawText, refDate, this.settings.endOfDayHour, this.settings.endOfWeekDay),
       });
     }
 
@@ -303,6 +306,8 @@ export class TodoIndex {
     const content = await this.app.vault.cachedRead(file);
     const lines = content.split("\n");
     const todos: Todo[] = [];
+    const fileDate = this.extractFileDate(file.name);
+    const refDate = fileDate ? parseDateString(fileDate) : new Date();
 
     for (const item of listItems) {
       if (item.task !== " ") continue;
@@ -317,7 +322,6 @@ export class TodoIndex {
       const rawText = todoMatch[1].trim();
       const assignedTo = this.getAssignment(rawText);
       const assignedToAlias = this.resolveAlias(assignedTo);
-      const fileDate = this.extractFileDate(file.name);
 
       todos.push({
         id: this.nextId++,
@@ -329,6 +333,7 @@ export class TodoIndex {
         fileMtime: file.stat.mtime,
         fileDate,
         lineNumber: lineNum,
+        dueDate: parseDueDate(rawText, refDate, this.settings.endOfDayHour, this.settings.endOfWeekDay),
       });
     }
 

@@ -140,6 +140,81 @@
 }
 
 /* ============================================================
+   Due Date Badges
+   ============================================================ */
+
+.notepack-due-badge {
+  font-size: 0.72em;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.notepack-due-overdue {
+  background-color: #b91c1c;
+  color: #fff;
+}
+
+.notepack-due-today {
+  background-color: #c2410c;
+  color: #fff;
+}
+
+.notepack-due-soon {
+  background-color: #166534;
+  color: #fff;
+}
+
+.notepack-due-future {
+  background-color: #475569;
+  color: #fff;
+}
+
+/* ============================================================
+   Urgency Sections (Overdue / Due Soon)
+   ============================================================ */
+
+.notepack-urgency-section {
+  margin-bottom: 16px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.notepack-urgency-header {
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 5px 10px;
+}
+
+.notepack-section-overdue .notepack-urgency-header {
+  background-color: #b91c1c;
+  color: #fff;
+}
+
+.notepack-section-due-soon .notepack-urgency-header {
+  background-color: #c2410c;
+  color: #fff;
+}
+
+.notepack-urgency-section .notepack-group {
+  padding: 0 10px;
+}
+
+.notepack-urgency-section .notepack-group-header {
+  margin-block-start: 8px;
+}
+
+.notepack-urgency-section .notepack-todo-list {
+  padding-bottom: 4px;
+}
+
+/* ============================================================
    Recent Files
    ============================================================ */
 

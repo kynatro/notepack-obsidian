@@ -1,6 +1,7 @@
 import { ItemView, WorkspaceLeaf, MarkdownRenderer } from "obsidian";
 import { VIEW_TYPE_MY_TODOS, Todo } from "./types";
 import { TodoIndex } from "./todoIndex";
+import { getDueDateStatus, formatDueDate } from "./dueDateParser";
 
 export class MyTodosView extends ItemView {
   private todoIndex: TodoIndex;
@@ -57,7 +58,65 @@ export class MyTodosView extends ItemView {
     const count = container.createDiv({ cls: "notepack-count" });
     count.setText(`${todos.length} open todo${todos.length !== 1 ? "s" : ""}`);
 
-    this.renderGroupedTodos(container, todos);
+    const overdue = todos.filter(
+      (t) => t.dueDate && getDueDateStatus(t.dueDate) === "overdue"
+    );
+    const dueSoon = todos.filter((t) => {
+      if (!t.dueDate) return false;
+      const s = getDueDateStatus(t.dueDate);
+      return s === "today" || s === "soon";
+    });
+    const regular = todos.filter(
+      (t) => !t.dueDate || getDueDateStatus(t.dueDate) === "future"
+    );
+
+    if (overdue.length > 0) {
+      this.renderUrgentSection(container, "Overdue", overdue, "notepack-section-overdue");
+    }
+    if (dueSoon.length > 0) {
+      this.renderUrgentSection(container, "Due Soon", dueSoon, "notepack-section-due-soon");
+    }
+    if (regular.length > 0) {
+      this.renderGroupedTodos(container, regular);
+    }
+  }
+
+  private renderUrgentSection(
+    container: HTMLElement,
+    title: string,
+    todos: Todo[],
+    sectionCls: string
+  ): void {
+    const section = container.createDiv({
+      cls: `notepack-urgency-section ${sectionCls}`,
+    });
+    section.createDiv({ cls: "notepack-urgency-header", text: title });
+
+    const sorted = [...todos].sort(
+      (a, b) => (a.dueDate?.getTime() ?? 0) - (b.dueDate?.getTime() ?? 0)
+    );
+
+    const groups = this.todoIndex.getGroupNames(sorted);
+    for (const group of groups) {
+      const groupTodos = sorted.filter((t) => t.groupName === group);
+      if (groupTodos.length === 0) continue;
+
+      const groupEl = section.createDiv({ cls: "notepack-group" });
+      const groupHeader = groupEl.createDiv({ cls: "notepack-group-header" });
+      const link = groupHeader.createEl("a", {
+        text: group,
+        cls: "notepack-group-link",
+      });
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.app.workspace.getLeaf(false).openFile(groupTodos[0].file);
+      });
+
+      const list = groupEl.createEl("ul", { cls: "notepack-todo-list" });
+      for (const todo of groupTodos) {
+        this.renderTodoItem(list, todo);
+      }
+    }
   }
 
   private renderGroupedTodos(container: HTMLElement, todos: Todo[]): void {
@@ -81,19 +140,30 @@ export class MyTodosView extends ItemView {
       });
 
       const list = groupEl.createEl("ul", { cls: "notepack-todo-list" });
-
       for (const todo of groupTodos) {
-        const li = list.createEl("li", { cls: "notepack-todo-item" });
-
-        const checkbox = li.createEl("input", { type: "checkbox" });
-        checkbox.addClass("notepack-checkbox");
-        checkbox.addEventListener("change", () => {
-          this.checkOffTodo(todo);
-        });
-
-        const text = li.createSpan({ cls: "notepack-todo-text" });
-        MarkdownRenderer.renderMarkdown(todo.text, text, todo.file.path, this);
+        this.renderTodoItem(list, todo);
       }
+    }
+  }
+
+  private renderTodoItem(list: HTMLElement, todo: Todo): void {
+    const li = list.createEl("li", { cls: "notepack-todo-item" });
+
+    const checkbox = li.createEl("input", { type: "checkbox" });
+    checkbox.addClass("notepack-checkbox");
+    checkbox.addEventListener("change", () => {
+      this.checkOffTodo(todo);
+    });
+
+    const text = li.createSpan({ cls: "notepack-todo-text" });
+    MarkdownRenderer.renderMarkdown(todo.text, text, todo.file.path, this);
+
+    if (todo.dueDate) {
+      const status = getDueDateStatus(todo.dueDate);
+      li.createSpan({
+        text: formatDueDate(todo.dueDate),
+        cls: `notepack-due-badge notepack-due-${status}`,
+      });
     }
   }
 

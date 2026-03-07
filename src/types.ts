@@ -22,6 +22,8 @@ export interface Todo {
   fileDate: string | null;
   /** Line number (0-based) in the source file */
   lineNumber: number;
+  /** Parsed due date from todo text, or null if none found */
+  dueDate: Date | null;
 }
 
 /**
@@ -56,6 +58,10 @@ export interface NotePackSettings {
   recentFilesCount: number;
   /** Debounce delay in ms for reindexing after file changes */
   debounceMs: number;
+  /** Hour (0–23) at which "end of day" is considered — used when parsing EOD due dates */
+  endOfDayHour: number;
+  /** Day of week (0=Sunday … 6=Saturday) considered the last day of the work week for EOW */
+  endOfWeekDay: number;
 }
 
 export const DEFAULT_SETTINGS: NotePackSettings = {
@@ -67,6 +73,8 @@ export const DEFAULT_SETTINGS: NotePackSettings = {
   todoGroupHeadingLevel: "####",
   recentFilesCount: 5,
   debounceMs: 500,
+  endOfDayHour: 17,
+  endOfWeekDay: 6,
 };
 
 /**
