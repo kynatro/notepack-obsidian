@@ -1,0 +1,13 @@
+{
+  "baseFolders": [
+    "Personal",
+    "ServiceNow"
+  ],
+  "teamFolder": "ServiceNow/Team",
+  "todoAnchorTitle": "Open Todos",
+  "recentFilesAnchorTitle": "Recent Files",
+  "anchorHeadingLevel": "##",
+  "todoGroupHeadingLevel": "####",
+  "recentFilesCount": 10,
+  "debounceMs": 500
+}
