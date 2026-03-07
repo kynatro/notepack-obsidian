@@ -21,6 +21,49 @@ Prefix with `@Name` to assign to a team member:
 - [ ] @John send updated timeline
 ```
 
+### Due Dates
+
+NotePack parses due dates directly from todo text. Any todo containing a recognizable due date expression will display a color-coded badge and be surfaced at the top of the sidebar views in **Overdue** and **Due Soon** sections.
+
+#### Supported patterns
+
+Wrap a date expression with a trigger phrase:
+
+```md
+- [ ] Submit expense report due by Friday
+- [ ] @Jane.Doe review PR due on March 15
+- [ ] Send invoice by EOD Monday
+- [ ] Close sprint by EOM
+```
+
+Trigger phrases: `due by`, `due on`, `due at`, `due`, `by`
+
+| Date format | Example |
+|---|---|
+| ISO date | `2026-03-15` |
+| US date | `3/15`, `3/15/2026` |
+| Named month | `March 15`, `Mar 15, 2026` |
+| Relative | `today`, `tomorrow` |
+| Weekday | `Friday`, `next Monday` |
+| EOD | `EOD` — end of day at the configured hour |
+| EOD compound | `EOD Monday`, `EOD March 15`, `EOD tomorrow` |
+| EOW | `EOW`, `end of week` — last day of the configured work week at 23:59 |
+| EOM | `EOM`, `end of month` — last day of the month at 23:59 |
+| EOQ | `EOQ`, `end of quarter` — last day of the quarter at 23:59 |
+| EOY | `EOY`, `end of year` — December 31 at 23:59 |
+
+#### Relative date context
+
+Relative expressions (`tomorrow`, `EOW`, `by Friday`, etc.) are resolved against the **file's date** when the filename starts with a date prefix (e.g. `2026-03-05 Standup.md`). This means a todo that said "by tomorrow" in a two-week-old note is correctly flagged as overdue rather than due tomorrow. Files without a date prefix fall back to today as the reference.
+
+#### Urgency sections
+
+The My Todos and Team Todos views sort due todos to the top:
+
+- **Overdue** (red) — due date has passed, or EOD time has passed today
+- **Due Soon** (orange) — due today or within the next 7 days
+- Todos with no due date, or a due date beyond 7 days, appear in the regular grouped section below with a color-coded badge indicating the date
+
 ### Team Management
 
 Create a `Team` folder (configurable) with subfolders for each team member. Each member folder should have a `README.md` with optional front-matter:
@@ -86,6 +129,8 @@ Configure via **Settings → NotePack**:
 - **Anchor heading level**: H-level for sections in README.md (default: `##`)
 - **Todo group heading level**: H-level for grouped todos within sections (default: `####`)
 - **Recent files count**: How many recent files to display
+- **End of day**: The time at which `EOD` due dates are considered overdue (default: 5:00 PM)
+- **End of week**: The last day of the work week for `EOW` due dates (default: Saturday)
 - **Debounce delay**: Milliseconds to wait after a change before re-indexing
 
 ## File Conventions
@@ -95,6 +140,7 @@ NotePack works with any file organization, but it works best if you:
 - Prefix note filenames with dates: `2024-01-15 Sprint Planning.md`
 - Keep a consistent note structure with a `## Follow-up` section for todos
 - Use `@Name` at the start of todos for assignment
+- Use `due by <date>` or `by <date>` in todo text to set a due date
 - Add `excludeTodos: true` to front-matter in files you want skipped
 
 ## Architecture (vs. CLI)
