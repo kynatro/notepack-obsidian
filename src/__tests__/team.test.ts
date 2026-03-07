@@ -168,6 +168,38 @@ describe("getTeamMembers", () => {
     expect(members[0].isNonReporting).toBe(true);
   });
 
+  it("defaults when README exists but has no frontmatter", () => {
+    const alice = new TFolder("Team/Alice");
+    const readmeFile = new TFile("Team/Alice/README.md");
+    alice.children = [readmeFile];
+
+    const app = buildMockApp({
+      teamFolderChildren: [alice],
+      fileCacheMap: {
+        "Team/Alice/README.md": { frontmatter: undefined },
+      },
+    });
+
+    const members = getTeamMembers(app, settings);
+    expect(members[0]).toEqual({ name: "Alice", aliases: [], isNonReporting: false });
+  });
+
+  it("defaults when README cache returns null", () => {
+    const alice = new TFolder("Team/Alice");
+    const readmeFile = new TFile("Team/Alice/README.md");
+    alice.children = [readmeFile];
+
+    const app = buildMockApp({
+      teamFolderChildren: [alice],
+      fileCacheMap: {
+        "Team/Alice/README.md": null,
+      },
+    });
+
+    const members = getTeamMembers(app, settings);
+    expect(members[0]).toEqual({ name: "Alice", aliases: [], isNonReporting: false });
+  });
+
   it("ignores non-array aliases field", () => {
     const alice = new TFolder("Team/Alice");
     const readmeFile = new TFile("Team/Alice/README.md");

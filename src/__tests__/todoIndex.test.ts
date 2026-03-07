@@ -529,6 +529,119 @@ describe("TodoIndex – todo field extraction", () => {
   });
 });
 
+// ─── refreshAliases ──────────────────────────────────────────────────────────
+
+describe("TodoIndex.refreshAliases", () => {
+  it("re-resolves assignedToAlias for all existing todos", () => {
+    // Start with no team members — @Alice.Smith stays unresolved
+    const app = buildMockApp({
+      "notes/a.md": "- [ ] @Alice.Smith do work",
+    });
+    const idx = new TodoIndex(app, baseSettings);
+    idx.rebuild();
+    expect(idx.getAllTodos()[0].assignedToAlias).toBe("Alice Smith");
+
+    // Now add a team folder so Alice resolves to canonical name
+    const aliceFolder = new TFolder("Team/Alice Smith");
+    const teamFolder = new TFolder("Team");
+    teamFolder.children = [aliceFolder];
+    (app.vault as any).getAbstractFileByPath = (path: string) => {
+      if (path === "Team") return teamFolder;
+      return null;
+    };
+
+    idx.refreshAliases();
+    expect(idx.getAllTodos()[0].assignedToAlias).toBe("Alice Smith");
+  });
+
+  it("notifies listeners after refreshing aliases", () => {
+    const app = buildMockApp({ "notes/a.md": "- [ ] @Alice do work" });
+    const idx = new TodoIndex(app, baseSettings);
+    idx.rebuild();
+
+    const cb = jest.fn();
+    idx.onChange(cb);
+    idx.refreshAliases();
+    expect(cb).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ─── updateFile – team README triggers refreshAliases ────────────────────────
+
+describe("TodoIndex.updateFile – team README handling", () => {
+  it("triggers refreshAliases when a team README.md is updated", () => {
+    const app = buildMockApp({
+      "notes/a.md": "- [ ] @alice do work",
+    });
+    const idx = new TodoIndex(app, {
+      ...baseSettings,
+      teamFolder: "Team",
+    });
+    idx.rebuild();
+
+    const cb = jest.fn();
+    idx.onChange(cb);
+
+    // Simulate updating a team README
+    const teamReadme = new TFile("Team/Alice/README.md");
+    idx.updateFile(teamReadme, "---\naliases: []\n---\n", undefined);
+
+    // Should have been notified (refreshAliases calls notify)
+    expect(cb).toHaveBeenCalled();
+  });
+
+  it("does not trigger refreshAliases for non-team README.md", () => {
+    const app = buildMockApp({
+      "notes/a.md": "- [ ] task",
+    });
+    const idx = new TodoIndex(app, baseSettings);
+    idx.rebuild();
+
+    const cb = jest.fn();
+    idx.onChange(cb);
+
+    // Update a non-team README — should be skipped entirely (isReadme returns early)
+    const rootReadme = new TFile("README.md");
+    idx.updateFile(rootReadme, "content", undefined);
+
+    expect(cb).not.toHaveBeenCalled();
+  });
+});
+
+// ─── getCachedContent fallback ───────────────────────────────────────────────
+
+describe("TodoIndex – getCachedContent fallback paths", () => {
+  it("falls back to cachedRead when readSync is unavailable", () => {
+    const content = "- [ ] Fallback task";
+    const app = buildMockApp({ "notes/a.md": content });
+    // Remove readSync so the fallback path is exercised
+    (app.vault as any).adapter = {};
+    // Make cachedRead return a string synchronously (simulating Obsidian's
+    // internal cache hit path that returns a string directly)
+    (app.vault as any).cachedRead = (file: any) =>
+      file.path === "notes/a.md" ? content : "";
+
+    const idx = new TodoIndex(app, baseSettings);
+    idx.rebuild();
+    expect(idx.getAllTodos()).toHaveLength(1);
+    expect(idx.getAllTodos()[0].text).toBe("Fallback task");
+  });
+
+  it("returns empty todos when both readSync and cachedRead are unavailable", () => {
+    const app = buildMockApp({
+      "notes/a.md": "- [ ] Unreachable task",
+    });
+    // Remove both sync read mechanisms
+    (app.vault as any).adapter = {};
+    (app.vault as any).cachedRead = undefined;
+
+    const idx = new TodoIndex(app, baseSettings);
+    idx.rebuild();
+    // File has listItems in cache but content can't be read — todos should be empty
+    expect(idx.getAllTodos()).toHaveLength(0);
+  });
+});
+
 // ─── rebuildAsync ─────────────────────────────────────────────────────────────
 
 describe("TodoIndex.rebuildAsync", () => {

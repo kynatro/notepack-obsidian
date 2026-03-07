@@ -480,6 +480,64 @@ describe("TodoExporter.exportTodosForFolders", () => {
   });
 });
 
+// ─── exportAll ────────────────────────────────────────────────────────────────
+
+describe("TodoExporter.exportAll", () => {
+  it("exports my todos, team todos, folder todos, and recent files", async () => {
+    const myTodo = makeTodo({ filePath: "notes/a.md", text: "My task" });
+    const aliceTodo = makeTodo({
+      filePath: "notes/b.md",
+      text: "Alice task",
+      assignedToAlias: "Alice",
+    });
+
+    const aliceFolder = makeFolder("Team/Alice");
+    const teamFolder = makeFolder("Team", [aliceFolder]);
+    const aliceReadme = makeTFile("Team/Alice/README.md");
+
+    const files: Record<string, string> = {
+      "README.md": "",
+      "Team/Alice/README.md": "",
+    };
+
+    const { app, modifyCalls } = buildMockApp({
+      files,
+      folderTree: {
+        Team: [aliceFolder],
+      },
+    });
+
+    // Make the team folder discoverable for getTeamMembers
+    const origGet = app.vault.getAbstractFileByPath.bind(app.vault);
+    (app.vault as any).getAbstractFileByPath = (path: string) => {
+      if (path === "Team") return teamFolder;
+      if (path === "Team/Alice") return aliceFolder;
+      if (path === "Team/Alice/README.md") return aliceReadme;
+      return origGet(path);
+    };
+
+    const idx = buildIndexStub({
+      myTodos: [myTodo],
+      teamTodos: { Alice: [aliceTodo] },
+    });
+    const exporter = new TodoExporter(app, baseSettings, idx);
+    await exporter.exportAll();
+
+    // Should have written to root README.md (my todos + recent files) and Team/Alice/README.md
+    const paths = modifyCalls.map((c) => c.path);
+    expect(paths).toContain("README.md");
+    expect(paths).toContain("Team/Alice/README.md");
+  });
+
+  it("returns without error when no README files exist", async () => {
+    const { app } = buildMockApp({});
+    const idx = buildIndexStub({});
+    const exporter = new TodoExporter(app, baseSettings, idx);
+    // Should not throw
+    await exporter.exportAll();
+  });
+});
+
 // ─── updateSettings ───────────────────────────────────────────────────────────
 
 describe("TodoExporter.updateSettings", () => {
