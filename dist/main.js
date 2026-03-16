@@ -138,8 +138,8 @@ var WEEKDAY_NAMES = {
   saturday: 6,
   sat: 6
 };
-var SIMPLE_DATE = `today|tomorrow|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)|\\d{4}-\\d{2}-\\d{2}|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?`;
-var DATE_CHUNK = `(?:\\d{4}-\\d{2}-\\d{2}|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?|today|tomorrow|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)|eod\\s+(?:${SIMPLE_DATE})|eod|eow|eom|eoq|eoy|end[\\s\\-]of[\\s\\-](?:day|week|month|quarter|year))`;
+var SIMPLE_DATE = `today|tomorrow|next\\s+(?:month|year)|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)|\\d{4}-\\d{2}-\\d{2}|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?`;
+var DATE_CHUNK = `(?:\\d{4}-\\d{2}-\\d{2}|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?|today|tomorrow|next\\s+(?:month|year)|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)|eod\\s+(?:${SIMPLE_DATE})|eod|eow|eom|eoq|eoy|end[\\s\\-]of[\\s\\-](?:day|week|month|quarter|year))`;
 var DUE_PATTERNS = [
   new RegExp(`\\bdue\\s+(?:by|on|at)\\s+(${DATE_CHUNK})`, "i"),
   new RegExp(`\\bdue\\s+(${DATE_CHUNK})`, "i"),
@@ -183,14 +183,23 @@ function parseAbsoluteDate(str, ref, endOfDayHour, endOfWeekDay) {
   if (s === "eoy" || s === "end of year" || s === "end-of-year") {
     return new Date(ref.getFullYear(), 11, 31, 23, 59, 59);
   }
+  if (s === "next month") {
+    return new Date(ref.getFullYear(), ref.getMonth() + 1, 1);
+  }
+  if (s === "next year") {
+    return new Date(ref.getFullYear() + 1, 0, 1);
+  }
   const weekdayMatch = s.match(
-    /^(?:next\s+)?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)$/
+    /^(next\s+)?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)$/
   );
   if (weekdayMatch) {
-    const target = WEEKDAY_NAMES[weekdayMatch[1]];
+    const hasNext = !!weekdayMatch[1];
+    const target = WEEKDAY_NAMES[weekdayMatch[2]];
     const today = startOfDay(ref);
     let diff = target - today.getDay();
     if (diff <= 0)
+      diff += 7;
+    if (hasNext)
       diff += 7;
     const d = new Date(today);
     d.setDate(d.getDate() + diff);
