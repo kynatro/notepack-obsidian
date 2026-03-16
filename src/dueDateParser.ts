@@ -26,6 +26,7 @@ const WEEKDAY_NAMES: Record<string, number> = {
 // Simple date expressions valid after "eod" in a compound like "EOD Monday"
 const SIMPLE_DATE =
   `today|tomorrow` +
+  `|next\\s+(?:month|year)` +
   `|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed` +
   `|thursday|thu|friday|fri|saturday|sat|sunday|sun)` +
   `|\\d{4}-\\d{2}-\\d{2}` +
@@ -45,6 +46,7 @@ const DATE_CHUNK =
   `|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)` +
   `\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?` +                  // March 15 [, 2024]
   `|today|tomorrow` +
+  `|next\\s+(?:month|year)` +                                          // next month / next year
   `|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed` +
   `|thursday|thu|friday|fri|saturday|sat|sunday|sun)` +                // [next] weekday
   `|eod\\s+(?:${SIMPLE_DATE})` +                                       // EOD compound: "EOD Monday"
@@ -112,15 +114,27 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
     return new Date(ref.getFullYear(), 11, 31, 23, 59, 59);
   }
 
-  // [next] weekday
+  // next month → first day of next month
+  if (s === "next month") {
+    return new Date(ref.getFullYear(), ref.getMonth() + 1, 1);
+  }
+
+  // next year → January 1 of next year
+  if (s === "next year") {
+    return new Date(ref.getFullYear() + 1, 0, 1);
+  }
+
+  // [next] weekday — bare weekday = next occurrence; "next" prefix skips one additional week
   const weekdayMatch = s.match(
-    /^(?:next\s+)?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)$/
+    /^(next\s+)?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)$/
   );
   if (weekdayMatch) {
-    const target = WEEKDAY_NAMES[weekdayMatch[1]];
+    const hasNext = !!weekdayMatch[1];
+    const target = WEEKDAY_NAMES[weekdayMatch[2]];
     const today = startOfDay(ref);
     let diff = target - today.getDay();
     if (diff <= 0) diff += 7;
+    if (hasNext) diff += 7;
     const d = new Date(today);
     d.setDate(d.getDate() + diff);
     return d;

@@ -136,8 +136,8 @@ describe("parseDueDate – weekdays (REF = Thursday Mar 5)", () => {
     expect(parseDueDate("due by monday", REF)).toEqual(d(2026, 3, 9));
   });
 
-  it("resolves 'next monday' the same as 'monday' from Thursday", () => {
-    expect(parseDueDate("due by next monday", REF)).toEqual(d(2026, 3, 9));
+  it("resolves 'next monday' to the Monday of the week after next from Thursday", () => {
+    expect(parseDueDate("due by next monday", REF)).toEqual(d(2026, 3, 16));
   });
 
   it("resolves 'saturday' to 2 days ahead", () => {
@@ -150,6 +150,42 @@ describe("parseDueDate – weekdays (REF = Thursday Mar 5)", () => {
 
   it("resolves abbreviated weekday 'mon'", () => {
     expect(parseDueDate("by mon", REF)).toEqual(d(2026, 3, 9));
+  });
+
+  it("resolves 'next wednesday' from Sunday to the following week's Wednesday", () => {
+    // Sunday March 15, 2026 — next occurrence of Wed is Mar 18; "next" skips to Mar 25
+    const sunRef = d(2026, 3, 15);
+    expect(parseDueDate("due next wednesday", sunRef)).toEqual(d(2026, 3, 25));
+  });
+
+  it("resolves 'next friday' from Thursday to a week after the upcoming Friday", () => {
+    // From Thursday Mar 5: upcoming Fri = Mar 6; "next" = Mar 13
+    expect(parseDueDate("due next friday", REF)).toEqual(d(2026, 3, 13));
+  });
+});
+
+// ─── parseDueDate – next month / next year ────────────────────────────────────
+
+describe("parseDueDate – next month / next year (REF = Thursday Mar 5)", () => {
+  it("'next month' resolves to the first of the next month", () => {
+    expect(parseDueDate("due next month", REF)).toEqual(d(2026, 4, 1));
+  });
+
+  it("'next month' from December wraps to January of the following year", () => {
+    const decRef = d(2026, 12, 15);
+    expect(parseDueDate("due next month", decRef)).toEqual(d(2027, 1, 1));
+  });
+
+  it("'next year' resolves to January 1 of the following year", () => {
+    expect(parseDueDate("due next year", REF)).toEqual(d(2027, 1, 1));
+  });
+
+  it("works with 'due by' trigger phrase", () => {
+    expect(parseDueDate("submit by next month", REF)).toEqual(d(2026, 4, 1));
+  });
+
+  it("works with 'due on' trigger phrase", () => {
+    expect(parseDueDate("due on next year", REF)).toEqual(d(2027, 1, 1));
   });
 });
 
