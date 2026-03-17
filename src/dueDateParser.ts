@@ -23,38 +23,43 @@ const WEEKDAY_NAMES: Record<string, number> = {
   saturday: 6, sat: 6,
 };
 
+// Shared regex fragments
+const MONTH_RE = `jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may` +
+  `|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?` +
+  `|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?`;
+const WEEKDAY_RE = `monday|mon|tuesday|tue|wednesday|wed` +
+  `|thursday|thu|friday|fri|saturday|sat|sunday|sun`;
+const ISO_DATE_RE = `\\d{4}-\\d{2}-\\d{2}`;
+const SLASH_DATE_RE = `\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?`;
+const MONTH_DAY_RE = `(?:${MONTH_RE})\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?`;
+const NEXT_PERIOD_RE = `next\\s+(?:week|month|year)`;
+const END_OF_NEXT_RE = `end[\\s\\-]of[\\s\\-]next[\\s\\-](?:week|month|year)`;
+const OPTIONAL_NEXT_WEEKDAY_RE = `(?:next\\s+)?(?:${WEEKDAY_RE})`;
+
 // Simple date expressions valid after "eod" in a compound like "EOD Monday"
 const SIMPLE_DATE =
   `today|tomorrow` +
-  `|next\\s+(?:week|month|year)` +
-  `|end[\\s\\-]of[\\s\\-]next[\\s\\-](?:week|month|year)` +
+  `|${NEXT_PERIOD_RE}` +
+  `|${END_OF_NEXT_RE}` +
   `|end[\\s\\-]of[\\s\\-](?:week|month|year)` +
-  `|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed` +
-  `|thursday|thu|friday|fri|saturday|sat|sunday|sun)` +
-  `|\\d{4}-\\d{2}-\\d{2}` +
-  `|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?` +
-  `|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may` +
-  `|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?` +
-  `|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)` +
-  `\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?`;
+  `|${OPTIONAL_NEXT_WEEKDAY_RE}` +
+  `|${ISO_DATE_RE}` +
+  `|${SLASH_DATE_RE}` +
+  `|${MONTH_DAY_RE}`;
 
 // A regex fragment that matches recognizable date expressions
 const DATE_CHUNK =
   `(?:` +
-  `\\d{4}-\\d{2}-\\d{2}` +                                             // 2024-03-15
-  `|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?` +                              // 3/15 or 3/15/2024
-  `|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may` +
-  `|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?` +
-  `|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)` +
-  `\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?` +                  // March 15 [, 2024]
+  `${ISO_DATE_RE}` +                                                    // 2024-03-15
+  `|${SLASH_DATE_RE}` +                                                 // 3/15 or 3/15/2024
+  `|${MONTH_DAY_RE}` +                                                  // March 15 [, 2024]
   `|today|tomorrow` +
-  `|next\\s+(?:week|month|year)` +                                      // next week / next month / next year
-  `|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed` +
-  `|thursday|thu|friday|fri|saturday|sat|sunday|sun)` +                // [next] weekday
-  `|eod\\s+(?:${SIMPLE_DATE})` +                                       // EOD compound: "EOD Monday"
+  `|${NEXT_PERIOD_RE}` +                                                // next week / next month / next year
+  `|${OPTIONAL_NEXT_WEEKDAY_RE}` +                                      // [next] weekday
+  `|eod\\s+(?:${SIMPLE_DATE})` +                                        // EOD compound: "EOD Monday"
   `|eod|eow|eom|eoq|eoy` +                                             // abbreviations (compound before standalone)
-  `|end[\\s\\-]of[\\s\\-]next[\\s\\-](?:week|month|year)` +           // end of next week/month/year
-  `|end[\\s\\-]of[\\s\\-](?:day|week|month|quarter|year)` +           // spelled out
+  `|${END_OF_NEXT_RE}` +                                                // end of next week/month/year
+  `|end[\\s\\-]of[\\s\\-](?:day|week|month|quarter|year)` +            // spelled out
   `)`;
 
 const DUE_PATTERNS = [
@@ -65,6 +70,14 @@ const DUE_PATTERNS = [
 
 function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function atEndOfDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+}
+
+function daysDiff(a: Date, b: Date): number {
+  return Math.round((startOfDay(a).getTime() - startOfDay(b).getTime()) / (1000 * 60 * 60 * 24));
 }
 
 function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWeekDay: number): Date | null {
@@ -99,39 +112,36 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
     if (unit === "week") {
       const d = startOfDay(ref);
       const daysUntilEOW = (endOfWeekDay - d.getDay() + 7) % 7;
-      return new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntilEOW + 7, 23, 59, 59);
+      return atEndOfDay(new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntilEOW + 7));
     }
     if (unit === "month") {
-      const last = new Date(ref.getFullYear(), ref.getMonth() + 2, 0);
-      return new Date(last.getFullYear(), last.getMonth(), last.getDate(), 23, 59, 59);
+      return atEndOfDay(new Date(ref.getFullYear(), ref.getMonth() + 2, 0));
     }
     // year
-    return new Date(ref.getFullYear() + 1, 11, 31, 23, 59, 59);
+    return atEndOfDay(new Date(ref.getFullYear() + 1, 11, 31));
   }
 
   // EOW / end of week → configured end-of-week day at 23:59:59
   if (s === "eow" || s === "end of week" || s === "end-of-week") {
     const d = startOfDay(ref);
     const daysUntilEOW = (endOfWeekDay - d.getDay() + 7) % 7;
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntilEOW, 23, 59, 59);
+    return atEndOfDay(new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntilEOW));
   }
 
   // EOM / end of month → last day of the reference date's month at 23:59:59
   if (s === "eom" || s === "end of month" || s === "end-of-month") {
-    const last = new Date(ref.getFullYear(), ref.getMonth() + 1, 0);
-    return new Date(last.getFullYear(), last.getMonth(), last.getDate(), 23, 59, 59);
+    return atEndOfDay(new Date(ref.getFullYear(), ref.getMonth() + 1, 0));
   }
 
   // EOQ / end of quarter → last day of the reference date's quarter at 23:59:59
   if (s === "eoq" || s === "end of quarter" || s === "end-of-quarter") {
     const quarterEndMonth = Math.floor(ref.getMonth() / 3) * 3 + 2;
-    const last = new Date(ref.getFullYear(), quarterEndMonth + 1, 0);
-    return new Date(last.getFullYear(), last.getMonth(), last.getDate(), 23, 59, 59);
+    return atEndOfDay(new Date(ref.getFullYear(), quarterEndMonth + 1, 0));
   }
 
   // EOY / end of year → December 31 at 23:59:59
   if (s === "eoy" || s === "end of year" || s === "end-of-year") {
-    return new Date(ref.getFullYear(), 11, 31, 23, 59, 59);
+    return atEndOfDay(new Date(ref.getFullYear(), 11, 31));
   }
 
   // next week → first day of next week, where the week starts the day after endOfWeekDay
@@ -155,7 +165,7 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
 
   // [next] weekday — bare weekday = next occurrence; "next" prefix skips one additional week
   const weekdayMatch = s.match(
-    /^(next\s+)?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)$/
+    new RegExp(`^(next\\s+)?(${WEEKDAY_RE})$`)
   );
   if (weekdayMatch) {
     const hasNext = !!weekdayMatch[1];
@@ -184,7 +194,7 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
 
   // Month DD [, YYYY]
   const monthMatch = s.match(
-    /^(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sep|sept|october|oct|november|nov|december|dec)\s+(\d{1,2})(?:st|nd|rd|th)?(?:[,\s]+(\d{4}))?$/
+    new RegExp(`^(${MONTH_RE})\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:[,\\s]+(\\d{4}))?$`)
   );
   if (monthMatch) {
     const month = MONTH_NAMES[monthMatch[1]];
@@ -228,9 +238,7 @@ export function parseDueDate(text: string, referenceDate: Date = new Date(), end
  */
 export function getDueDateStatus(date: Date): "overdue" | "today" | "soon" | "future" {
   const now = new Date();
-  const today = startOfDay(now);
-  const d = startOfDay(date);
-  const diff = Math.round((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const diff = daysDiff(date, now);
   if (diff < 0) return "overdue";
   if (diff === 0) {
     // For dates with an explicit time component (e.g. EOD at 17:00), check whether
@@ -248,15 +256,15 @@ export function getDueDateStatus(date: Date): "overdue" | "today" | "soon" | "fu
  * Format a due date for compact display.
  */
 export function formatDueDate(date: Date): string {
-  const today = startOfDay(new Date());
+  const now = new Date();
   const d = startOfDay(date);
-  const diff = Math.round((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const diff = daysDiff(date, now);
 
   if (diff === 0) return "Today";
   if (diff === 1) return "Tomorrow";
   if (diff === -1) return "Yesterday";
   if (diff > 1 && diff <= 6) return d.toLocaleDateString("en-US", { weekday: "long" });
-  if (d.getFullYear() === today.getFullYear()) {
+  if (d.getFullYear() === now.getFullYear()) {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
