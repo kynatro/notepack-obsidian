@@ -69,23 +69,15 @@ export class TodoExporter {
   }
 
   /**
-   * Recursively find all README.md files in base folders and write
+   * Recursively find all README.md files in the vault and write
    * folder-scoped todos into each one.
    */
   async exportTodosForFolders(): Promise<number> {
-    let count = 0;
-
-    for (const baseFolder of this.settings.baseFolders) {
-      count += await this.exportFolderRecursive(baseFolder);
-    }
-
-    return count;
+    const root = this.app.vault.getRoot();
+    return this.exportFolderRecursive(root);
   }
 
-  private async exportFolderRecursive(folderPath: string): Promise<number> {
-    const folder = this.app.vault.getAbstractFileByPath(folderPath);
-    if (!(folder instanceof TFolder)) return 0;
-
+  private async exportFolderRecursive(folder: TFolder): Promise<number> {
     let count = 0;
 
     for (const child of folder.children) {
@@ -104,7 +96,7 @@ export class TodoExporter {
       }
 
       // Recurse into subdirectories
-      count += await this.exportFolderRecursive(child.path);
+      count += await this.exportFolderRecursive(child);
     }
 
     return count;
@@ -150,10 +142,7 @@ export class TodoExporter {
       .filter((f) => {
         if (f.name === "README.md") return false;
         if (f.path.toLowerCase().includes("archive")) return false;
-        if (this.settings.baseFolders.length === 0) return true;
-        return this.settings.baseFolders.some(
-          (base) => f.path.startsWith(base + "/") || f.path.startsWith(base)
-        );
+        return true;
       })
       .sort((a, b) => b.stat.mtime - a.stat.mtime)
       .slice(0, this.settings.recentFilesCount);

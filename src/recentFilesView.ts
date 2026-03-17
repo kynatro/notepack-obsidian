@@ -97,10 +97,7 @@ export class RecentFilesView extends ItemView {
       .filter((f) => {
         if (f.name === "README.md") return false;
         if (f.path.toLowerCase().includes("archive")) return false;
-        if (this.settings.baseFolders.length === 0) return true;
-        return this.settings.baseFolders.some(
-          (base) => f.path.startsWith(base + "/") || f.path.startsWith(base)
-        );
+        return true;
       })
       .sort((a, b) => b.stat.mtime - a.stat.mtime)
       .slice(0, this.settings.recentFilesCount);

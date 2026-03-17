@@ -42,8 +42,6 @@ export interface TeamMember {
  * Plugin settings persisted to data.json.
  */
 export interface NotePackSettings {
-  /** Folders to scan for todos (vault-relative paths) */
-  baseFolders: string[];
   /** Team folder path (vault-relative) */
   teamFolder: string;
   /** Heading text for the todo section in README.md exports */
@@ -65,7 +63,6 @@ export interface NotePackSettings {
 }
 
 export const DEFAULT_SETTINGS: NotePackSettings = {
-  baseFolders: [],
   teamFolder: "Team",
   todoAnchorTitle: "Open Todos",
   recentFilesAnchorTitle: "Recent Files",

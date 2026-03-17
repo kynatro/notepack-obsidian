@@ -90,7 +90,6 @@ function buildMockApp(
 
 const baseSettings: NotePackSettings = {
   ...DEFAULT_SETTINGS,
-  baseFolders: [],
   teamFolder: "Team",
 };
 
@@ -139,28 +138,14 @@ describe("TodoIndex.rebuild", () => {
     expect(idx.getAllTodos()[0].text).toBe("Current todo");
   });
 
-  it("respects baseFolders setting — excludes files outside scope", () => {
+  it("scans all vault files (not limited to specific folders)", () => {
     const app = buildMockApp({
-      "notes/included.md": "- [ ] In scope",
-      "other/excluded.md": "- [ ] Out of scope",
+      "notes/included.md": "- [ ] In notes",
+      "other/also.md": "- [ ] In other",
     });
-    const idx = new TodoIndex(app, { ...baseSettings, baseFolders: ["notes"] });
+    const idx = new TodoIndex(app, baseSettings);
     idx.rebuild();
-    expect(idx.getAllTodos()).toHaveLength(1);
-    expect(idx.getAllTodos()[0].text).toBe("In scope");
-  });
-
-  it("includes team folder files regardless of baseFolders", () => {
-    const app = buildMockApp({
-      "Team/Alice/2026-03-01.md": "- [ ] Alice todo",
-    });
-    const idx = new TodoIndex(app, {
-      ...baseSettings,
-      baseFolders: ["notes"],
-      teamFolder: "Team",
-    });
-    idx.rebuild();
-    expect(idx.getAllTodos()).toHaveLength(1);
+    expect(idx.getAllTodos()).toHaveLength(2);
   });
 
   it("notifies listeners after rebuild", () => {
@@ -233,18 +218,18 @@ describe("TodoIndex.updateFile", () => {
     expect(todos.map((t) => t.text)).toContain("Second todo");
   });
 
-  it("removes file from index when file goes out of scope", () => {
-    const app = buildMockApp({ "other/a.md": "- [ ] Out of scope todo" });
-    const idx = new TodoIndex(app, { ...baseSettings, baseFolders: ["other"] });
+  it("removes file from index when file moves to archive", () => {
+    const app = buildMockApp({ "notes/a.md": "- [ ] A todo" });
+    const idx = new TodoIndex(app, baseSettings);
     idx.rebuild();
     expect(idx.getAllTodos()).toHaveLength(1);
 
-    // Update settings so file is now out of scope
-    idx.updateSettings({ ...baseSettings, baseFolders: ["notes"] });
-    const file = new TFile("other/a.md");
-    idx.updateFile(file, "- [ ] Out of scope todo", undefined);
+    // Simulate file moving to archive (now out of scope)
+    const file = new TFile("archive/a.md");
+    idx.updateFile(file, "- [ ] A todo", undefined);
 
-    expect(idx.getAllTodos()).toHaveLength(0);
+    // Archive file should not be indexed
+    expect(idx.getAllTodos()).toHaveLength(1); // original still there, archive not added
   });
 
   it("notifies listeners on update", () => {
