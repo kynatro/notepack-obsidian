@@ -8,8 +8,9 @@
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "test": "jest --verbose",
     "test:coverage": "jest --coverage",
-    "preversion": "npm test",
-    "version": "node scripts/version.js && git add src/manifest.json"
+    "preversion": "node scripts/preversion.js && npm test",
+    "version": "node scripts/version.js && git add src/manifest.json",
+    "postversion": "node scripts/postversion.js"
   },
   "keywords": [
     "obsidian",
