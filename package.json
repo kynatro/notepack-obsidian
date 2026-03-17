@@ -17,6 +17,13 @@
   ],
   "author": "Dave Shepard",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kynatro/notepack-obsidian.git"
+  },
+  "engines": {
+    "node": "20"
+  },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^20.11.0",
