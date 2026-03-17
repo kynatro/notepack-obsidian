@@ -27,6 +27,8 @@ const WEEKDAY_NAMES: Record<string, number> = {
 const SIMPLE_DATE =
   `today|tomorrow` +
   `|next\\s+(?:month|year)` +
+  `|end[\\s\\-]of[\\s\\-]next[\\s\\-](?:week|month|year)` +
+  `|end[\\s\\-]of[\\s\\-](?:week|month|year)` +
   `|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed` +
   `|thursday|thu|friday|fri|saturday|sat|sunday|sun)` +
   `|\\d{4}-\\d{2}-\\d{2}` +
@@ -51,6 +53,7 @@ const DATE_CHUNK =
   `|thursday|thu|friday|fri|saturday|sat|sunday|sun)` +                // [next] weekday
   `|eod\\s+(?:${SIMPLE_DATE})` +                                       // EOD compound: "EOD Monday"
   `|eod|eow|eom|eoq|eoy` +                                             // abbreviations (compound before standalone)
+  `|end[\\s\\-]of[\\s\\-]next[\\s\\-](?:week|month|year)` +           // end of next week/month/year
   `|end[\\s\\-]of[\\s\\-](?:day|week|month|quarter|year)` +           // spelled out
   `)`;
 
@@ -87,6 +90,23 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
     if (baseDate) {
       return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), endOfDayHour, 0, 0);
     }
+  }
+
+  // End of next week/month/year
+  const endOfNextMatch = s.match(/^end[\s-]of[\s-]next[\s-](week|month|year)$/);
+  if (endOfNextMatch) {
+    const unit = endOfNextMatch[1];
+    if (unit === "week") {
+      const d = startOfDay(ref);
+      const daysUntilEOW = (endOfWeekDay - d.getDay() + 7) % 7;
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntilEOW + 7, 23, 59, 59);
+    }
+    if (unit === "month") {
+      const last = new Date(ref.getFullYear(), ref.getMonth() + 2, 0);
+      return new Date(last.getFullYear(), last.getMonth(), last.getDate(), 23, 59, 59);
+    }
+    // year
+    return new Date(ref.getFullYear() + 1, 11, 31, 23, 59, 59);
   }
 
   // EOW / end of week → configured end-of-week day at 23:59:59

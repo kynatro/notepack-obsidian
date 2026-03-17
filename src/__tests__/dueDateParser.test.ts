@@ -189,6 +189,65 @@ describe("parseDueDate – next month / next year (REF = Thursday Mar 5)", () =>
   });
 });
 
+// ─── parseDueDate – end of next X ────────────────────────────────────────────
+
+describe("parseDueDate – end of next week/month/year (REF = Thursday Mar 5)", () => {
+  it("'end of next week' resolves to the end-of-week day of next week", () => {
+    // EOW = Saturday Mar 7; end of NEXT week = Saturday Mar 14
+    expect(parseDueDate("due end of next week", REF, 17, 6)).toEqual(
+      d(2026, 3, 14, 23, 59, 59)
+    );
+  });
+
+  it("'end of next week' respects custom endOfWeekDay (Friday)", () => {
+    // EOW = Friday Mar 6; end of NEXT week = Friday Mar 13
+    expect(parseDueDate("due end of next week", REF, 17, 5)).toEqual(
+      d(2026, 3, 13, 23, 59, 59)
+    );
+  });
+
+  it("'end of next week' when today is the end-of-week day still advances a full week", () => {
+    // Saturday March 7 is EOW; end of next week = Saturday March 14
+    const satRef = d(2026, 3, 7);
+    expect(parseDueDate("due end of next week", satRef, 17, 6)).toEqual(
+      d(2026, 3, 14, 23, 59, 59)
+    );
+  });
+
+  it("'end of next month' resolves to the last day of next month at 23:59:59", () => {
+    // March ref → end of April = April 30
+    expect(parseDueDate("due end of next month", REF)).toEqual(
+      d(2026, 4, 30, 23, 59, 59)
+    );
+  });
+
+  it("'end of next month' from January resolves to last day of February", () => {
+    const janRef = d(2026, 1, 15);
+    expect(parseDueDate("due end of next month", janRef)).toEqual(
+      d(2026, 2, 28, 23, 59, 59)
+    );
+  });
+
+  it("'end of next month' from December wraps to January 31 of next year", () => {
+    const decRef = d(2026, 12, 15);
+    expect(parseDueDate("due end of next month", decRef)).toEqual(
+      d(2027, 1, 31, 23, 59, 59)
+    );
+  });
+
+  it("'end of next year' resolves to December 31 of next year at 23:59:59", () => {
+    expect(parseDueDate("due end of next year", REF)).toEqual(
+      d(2027, 12, 31, 23, 59, 59)
+    );
+  });
+
+  it("works with 'by' trigger phrase", () => {
+    expect(parseDueDate("submit by end of next month", REF)).toEqual(
+      d(2026, 4, 30, 23, 59, 59)
+    );
+  });
+});
+
 // ─── parseDueDate – EO* keywords ────────────────────────────────────────────
 
 describe("parseDueDate – EO* keywords (REF = Thursday Mar 5)", () => {
@@ -308,6 +367,30 @@ describe("parseDueDate – EOD compound (REF = Thursday Mar 5)", () => {
   it("'EOD March 15' resolves to named month date at endOfDayHour", () => {
     const result = parseDueDate("due EOD March 15", REF, 17, 6);
     expect(result).toEqual(d(2026, 3, 15, 17));
+  });
+
+  it("'EOD end of week' resolves to EOW at endOfDayHour", () => {
+    expect(parseDueDate("by EOD end of week", REF, 17, 6)).toEqual(
+      d(2026, 3, 7, 17)
+    );
+  });
+
+  it("'EOD end of month' resolves to last day of month at endOfDayHour", () => {
+    expect(parseDueDate("due EOD end of month", REF, 17, 6)).toEqual(
+      d(2026, 3, 31, 17)
+    );
+  });
+
+  it("'EOD end of year' resolves to Dec 31 at endOfDayHour", () => {
+    expect(parseDueDate("due EOD end of year", REF, 17, 6)).toEqual(
+      d(2026, 12, 31, 17)
+    );
+  });
+
+  it("'EOD end of next week' resolves to next EOW at endOfDayHour", () => {
+    expect(parseDueDate("due EOD end of next week", REF, 17, 6)).toEqual(
+      d(2026, 3, 14, 17)
+    );
   });
 
   it("is case insensitive for compound", () => {
