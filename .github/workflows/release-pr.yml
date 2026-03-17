@@ -27,4 +27,5 @@ jobs:
           gh pr create \
             --base main \
             --head "${{ github.ref_name }}" \
-            --title "Release: ${{ steps.version.outputs.version }}"
+            --title "Release: ${{ steps.version.outputs.version }}" \
+            --fill-verbose
