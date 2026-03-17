@@ -7,7 +7,9 @@
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "test": "jest --verbose",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "preversion": "npm test",
+    "version": "node scripts/version.js && git add src/manifest.json"
   },
   "keywords": [
     "obsidian",
@@ -17,6 +19,13 @@
   ],
   "author": "Dave Shepard",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kynatro/notepack-obsidian.git"
+  },
+  "engines": {
+    "node": "20"
+  },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^20.11.0",

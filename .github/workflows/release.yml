@@ -76,4 +76,7 @@ jobs:
             --title "NotePack ${VERSION}" \
             --notes-file RELEASE_NOTES.md \
             --latest \
-            "notepack-obsidian-${{ steps.version.outputs.version }}.zip"
+            "notepack-obsidian-${{ steps.version.outputs.version }}.zip" \
+            "dist/main.js" \
+            "dist/manifest.json" \
+            "dist/styles.css"
