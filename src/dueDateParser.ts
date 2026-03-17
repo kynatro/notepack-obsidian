@@ -1,3 +1,11 @@
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+const DAYS_PER_WEEK = 7;
+const MONTHS_PER_QUARTER = 3;
+const SOON_THRESHOLD_DAYS = 7;
+const WEEKDAY_DISPLAY_DAYS = 6;
+const JANUARY = 0;
+const DECEMBER = 11;
+
 const MONTH_NAMES: Record<string, number> = {
   january: 0, jan: 0,
   february: 1, feb: 1,
@@ -77,7 +85,7 @@ function atEndOfDay(d: Date): Date {
 }
 
 function daysDiff(a: Date, b: Date): number {
-  return Math.round((startOfDay(a).getTime() - startOfDay(b).getTime()) / (1000 * 60 * 60 * 24));
+  return Math.round((startOfDay(a).getTime() - startOfDay(b).getTime()) / MS_PER_DAY);
 }
 
 function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWeekDay: number): Date | null {
@@ -111,20 +119,20 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
     const unit = endOfNextMatch[1];
     if (unit === "week") {
       const d = startOfDay(ref);
-      const daysUntilEOW = (endOfWeekDay - d.getDay() + 7) % 7;
-      return atEndOfDay(new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntilEOW + 7));
+      const daysUntilEOW = (endOfWeekDay - d.getDay() + DAYS_PER_WEEK) % DAYS_PER_WEEK;
+      return atEndOfDay(new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntilEOW + DAYS_PER_WEEK));
     }
     if (unit === "month") {
       return atEndOfDay(new Date(ref.getFullYear(), ref.getMonth() + 2, 0));
     }
     // year
-    return atEndOfDay(new Date(ref.getFullYear() + 1, 11, 31));
+    return atEndOfDay(new Date(ref.getFullYear() + 1, DECEMBER, 31));
   }
 
   // EOW / end of week → configured end-of-week day at 23:59:59
   if (s === "eow" || s === "end of week" || s === "end-of-week") {
     const d = startOfDay(ref);
-    const daysUntilEOW = (endOfWeekDay - d.getDay() + 7) % 7;
+    const daysUntilEOW = (endOfWeekDay - d.getDay() + DAYS_PER_WEEK) % DAYS_PER_WEEK;
     return atEndOfDay(new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntilEOW));
   }
 
@@ -135,21 +143,21 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
 
   // EOQ / end of quarter → last day of the reference date's quarter at 23:59:59
   if (s === "eoq" || s === "end of quarter" || s === "end-of-quarter") {
-    const quarterEndMonth = Math.floor(ref.getMonth() / 3) * 3 + 2;
+    const quarterEndMonth = Math.floor(ref.getMonth() / MONTHS_PER_QUARTER) * MONTHS_PER_QUARTER + (MONTHS_PER_QUARTER - 1);
     return atEndOfDay(new Date(ref.getFullYear(), quarterEndMonth + 1, 0));
   }
 
   // EOY / end of year → December 31 at 23:59:59
   if (s === "eoy" || s === "end of year" || s === "end-of-year") {
-    return atEndOfDay(new Date(ref.getFullYear(), 11, 31));
+    return atEndOfDay(new Date(ref.getFullYear(), DECEMBER, 31));
   }
 
   // next week → first day of next week, where the week starts the day after endOfWeekDay
   if (s === "next week") {
     const d = startOfDay(ref);
-    const startOfWeekDay = (endOfWeekDay + 1) % 7;
-    const daysIntoWeek = (d.getDay() - startOfWeekDay + 7) % 7;
-    d.setDate(d.getDate() - daysIntoWeek + 7);
+    const startOfWeekDay = (endOfWeekDay + 1) % DAYS_PER_WEEK;
+    const daysIntoWeek = (d.getDay() - startOfWeekDay + DAYS_PER_WEEK) % DAYS_PER_WEEK;
+    d.setDate(d.getDate() - daysIntoWeek + DAYS_PER_WEEK);
     return d;
   }
 
@@ -160,7 +168,7 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
 
   // next year → January 1 of next year
   if (s === "next year") {
-    return new Date(ref.getFullYear() + 1, 0, 1);
+    return new Date(ref.getFullYear() + 1, JANUARY, 1);
   }
 
   // [next] weekday — bare weekday = next occurrence; "next" prefix skips one additional week
@@ -172,8 +180,8 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
     const target = WEEKDAY_NAMES[weekdayMatch[2]];
     const today = startOfDay(ref);
     let diff = target - today.getDay();
-    if (diff <= 0) diff += 7;
-    if (hasNext) diff += 7;
+    if (diff <= 0) diff += DAYS_PER_WEEK;
+    if (hasNext) diff += DAYS_PER_WEEK;
     const d = new Date(today);
     d.setDate(d.getDate() + diff);
     return d;
@@ -248,7 +256,7 @@ export function getDueDateStatus(date: Date): "overdue" | "today" | "soon" | "fu
     }
     return "today";
   }
-  if (diff <= 7) return "soon";
+  if (diff <= SOON_THRESHOLD_DAYS) return "soon";
   return "future";
 }
 
@@ -263,7 +271,7 @@ export function formatDueDate(date: Date): string {
   if (diff === 0) return "Today";
   if (diff === 1) return "Tomorrow";
   if (diff === -1) return "Yesterday";
-  if (diff > 1 && diff <= 6) return d.toLocaleDateString("en-US", { weekday: "long" });
+  if (diff > 1 && diff <= WEEKDAY_DISPLAY_DAYS) return d.toLocaleDateString("en-US", { weekday: "long" });
   if (d.getFullYear() === now.getFullYear()) {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
