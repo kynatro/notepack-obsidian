@@ -12,7 +12,9 @@ execSync(
 );
 console.log(`Created pull request for ${branch}`);
 
+execSync(`git checkout dev`);
+execSync(`git merge ${branch}`);
+execSync(`git push -u origin dev`);
+
 execSync(`git tag -d v${version}`);
 console.log(`Deleted local tag v${version}`);
-
-execSync(`git checkout dev`);
