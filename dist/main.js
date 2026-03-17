@@ -138,8 +138,8 @@ var WEEKDAY_NAMES = {
   saturday: 6,
   sat: 6
 };
-var SIMPLE_DATE = `today|tomorrow|next\\s+(?:month|year)|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)|\\d{4}-\\d{2}-\\d{2}|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?`;
-var DATE_CHUNK = `(?:\\d{4}-\\d{2}-\\d{2}|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?|today|tomorrow|next\\s+(?:month|year)|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)|eod\\s+(?:${SIMPLE_DATE})|eod|eow|eom|eoq|eoy|end[\\s\\-]of[\\s\\-](?:day|week|month|quarter|year))`;
+var SIMPLE_DATE = `today|tomorrow|next\\s+(?:week|month|year)|end[\\s\\-]of[\\s\\-]next[\\s\\-](?:week|month|year)|end[\\s\\-]of[\\s\\-](?:week|month|year)|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)|\\d{4}-\\d{2}-\\d{2}|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?`;
+var DATE_CHUNK = `(?:\\d{4}-\\d{2}-\\d{2}|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?|today|tomorrow|next\\s+(?:week|month|year)|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)|eod\\s+(?:${SIMPLE_DATE})|eod|eow|eom|eoq|eoy|end[\\s\\-]of[\\s\\-]next[\\s\\-](?:week|month|year)|end[\\s\\-]of[\\s\\-](?:day|week|month|quarter|year))`;
 var DUE_PATTERNS = [
   new RegExp(`\\bdue\\s+(?:by|on|at)\\s+(${DATE_CHUNK})`, "i"),
   new RegExp(`\\bdue\\s+(${DATE_CHUNK})`, "i"),
@@ -166,6 +166,20 @@ function parseAbsoluteDate(str, ref, endOfDayHour, endOfWeekDay) {
       return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), endOfDayHour, 0, 0);
     }
   }
+  const endOfNextMatch = s.match(/^end[\s-]of[\s-]next[\s-](week|month|year)$/);
+  if (endOfNextMatch) {
+    const unit = endOfNextMatch[1];
+    if (unit === "week") {
+      const d = startOfDay(ref);
+      const daysUntilEOW = (endOfWeekDay - d.getDay() + 7) % 7;
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntilEOW + 7, 23, 59, 59);
+    }
+    if (unit === "month") {
+      const last = new Date(ref.getFullYear(), ref.getMonth() + 2, 0);
+      return new Date(last.getFullYear(), last.getMonth(), last.getDate(), 23, 59, 59);
+    }
+    return new Date(ref.getFullYear() + 1, 11, 31, 23, 59, 59);
+  }
   if (s === "eow" || s === "end of week" || s === "end-of-week") {
     const d = startOfDay(ref);
     const daysUntilEOW = (endOfWeekDay - d.getDay() + 7) % 7;
@@ -182,6 +196,13 @@ function parseAbsoluteDate(str, ref, endOfDayHour, endOfWeekDay) {
   }
   if (s === "eoy" || s === "end of year" || s === "end-of-year") {
     return new Date(ref.getFullYear(), 11, 31, 23, 59, 59);
+  }
+  if (s === "next week") {
+    const d = startOfDay(ref);
+    const startOfWeekDay = (endOfWeekDay + 1) % 7;
+    const daysIntoWeek = (d.getDay() - startOfWeekDay + 7) % 7;
+    d.setDate(d.getDate() - daysIntoWeek + 7);
+    return d;
   }
   if (s === "next month") {
     return new Date(ref.getFullYear(), ref.getMonth() + 1, 1);
