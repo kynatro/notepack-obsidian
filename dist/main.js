@@ -96,6 +96,13 @@ function getTeamMemberAliases(app, settings) {
 }
 
 // src/dueDateParser.ts
+var MS_PER_DAY = 1e3 * 60 * 60 * 24;
+var DAYS_PER_WEEK = 7;
+var MONTHS_PER_QUARTER = 3;
+var SOON_THRESHOLD_DAYS = 7;
+var WEEKDAY_DISPLAY_DAYS = 6;
+var JANUARY = 0;
+var DECEMBER = 11;
 var MONTH_NAMES = {
   january: 0,
   jan: 0,
@@ -138,8 +145,16 @@ var WEEKDAY_NAMES = {
   saturday: 6,
   sat: 6
 };
-var SIMPLE_DATE = `today|tomorrow|next\\s+(?:week|month|year)|end[\\s\\-]of[\\s\\-]next[\\s\\-](?:week|month|year)|end[\\s\\-]of[\\s\\-](?:week|month|year)|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)|\\d{4}-\\d{2}-\\d{2}|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?`;
-var DATE_CHUNK = `(?:\\d{4}-\\d{2}-\\d{2}|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?|today|tomorrow|next\\s+(?:week|month|year)|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)|eod\\s+(?:${SIMPLE_DATE})|eod|eow|eom|eoq|eoy|end[\\s\\-]of[\\s\\-]next[\\s\\-](?:week|month|year)|end[\\s\\-]of[\\s\\-](?:day|week|month|quarter|year))`;
+var MONTH_RE = `jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?`;
+var WEEKDAY_RE = `monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun`;
+var ISO_DATE_RE = `\\d{4}-\\d{2}-\\d{2}`;
+var SLASH_DATE_RE = `\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?`;
+var MONTH_DAY_RE = `(?:${MONTH_RE})\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?`;
+var NEXT_PERIOD_RE = `next\\s+(?:week|month|year)`;
+var END_OF_NEXT_RE = `end[\\s\\-]of[\\s\\-]next[\\s\\-](?:week|month|year)`;
+var OPTIONAL_NEXT_WEEKDAY_RE = `(?:next\\s+)?(?:${WEEKDAY_RE})`;
+var SIMPLE_DATE = `today|tomorrow|${NEXT_PERIOD_RE}|${END_OF_NEXT_RE}|end[\\s\\-]of[\\s\\-](?:week|month|year)|${OPTIONAL_NEXT_WEEKDAY_RE}|${ISO_DATE_RE}|${SLASH_DATE_RE}|${MONTH_DAY_RE}`;
+var DATE_CHUNK = `(?:${ISO_DATE_RE}|${SLASH_DATE_RE}|${MONTH_DAY_RE}|today|tomorrow|${NEXT_PERIOD_RE}|${OPTIONAL_NEXT_WEEKDAY_RE}|eod\\s+(?:${SIMPLE_DATE})|eod|eow|eom|eoq|eoy|${END_OF_NEXT_RE}|end[\\s\\-]of[\\s\\-](?:day|week|month|quarter|year))`;
 var DUE_PATTERNS = [
   new RegExp(`\\bdue\\s+(?:by|on|at)\\s+(${DATE_CHUNK})`, "i"),
   new RegExp(`\\bdue\\s+(${DATE_CHUNK})`, "i"),
@@ -147,6 +162,12 @@ var DUE_PATTERNS = [
 ];
 function startOfDay(d) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+function atEndOfDay(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+}
+function daysDiff(a, b) {
+  return Math.round((startOfDay(a).getTime() - startOfDay(b).getTime()) / MS_PER_DAY);
 }
 function parseAbsoluteDate(str, ref, endOfDayHour, endOfWeekDay) {
   const s = str.trim().toLowerCase();
@@ -171,47 +192,44 @@ function parseAbsoluteDate(str, ref, endOfDayHour, endOfWeekDay) {
     const unit = endOfNextMatch[1];
     if (unit === "week") {
       const d = startOfDay(ref);
-      const daysUntilEOW = (endOfWeekDay - d.getDay() + 7) % 7;
-      return new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntilEOW + 7, 23, 59, 59);
+      const daysUntilEOW = (endOfWeekDay - d.getDay() + DAYS_PER_WEEK) % DAYS_PER_WEEK;
+      return atEndOfDay(new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntilEOW + DAYS_PER_WEEK));
     }
     if (unit === "month") {
-      const last = new Date(ref.getFullYear(), ref.getMonth() + 2, 0);
-      return new Date(last.getFullYear(), last.getMonth(), last.getDate(), 23, 59, 59);
+      return atEndOfDay(new Date(ref.getFullYear(), ref.getMonth() + 2, 0));
     }
-    return new Date(ref.getFullYear() + 1, 11, 31, 23, 59, 59);
+    return atEndOfDay(new Date(ref.getFullYear() + 1, DECEMBER, 31));
   }
   if (s === "eow" || s === "end of week" || s === "end-of-week") {
     const d = startOfDay(ref);
-    const daysUntilEOW = (endOfWeekDay - d.getDay() + 7) % 7;
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntilEOW, 23, 59, 59);
+    const daysUntilEOW = (endOfWeekDay - d.getDay() + DAYS_PER_WEEK) % DAYS_PER_WEEK;
+    return atEndOfDay(new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntilEOW));
   }
   if (s === "eom" || s === "end of month" || s === "end-of-month") {
-    const last = new Date(ref.getFullYear(), ref.getMonth() + 1, 0);
-    return new Date(last.getFullYear(), last.getMonth(), last.getDate(), 23, 59, 59);
+    return atEndOfDay(new Date(ref.getFullYear(), ref.getMonth() + 1, 0));
   }
   if (s === "eoq" || s === "end of quarter" || s === "end-of-quarter") {
-    const quarterEndMonth = Math.floor(ref.getMonth() / 3) * 3 + 2;
-    const last = new Date(ref.getFullYear(), quarterEndMonth + 1, 0);
-    return new Date(last.getFullYear(), last.getMonth(), last.getDate(), 23, 59, 59);
+    const quarterEndMonth = Math.floor(ref.getMonth() / MONTHS_PER_QUARTER) * MONTHS_PER_QUARTER + (MONTHS_PER_QUARTER - 1);
+    return atEndOfDay(new Date(ref.getFullYear(), quarterEndMonth + 1, 0));
   }
   if (s === "eoy" || s === "end of year" || s === "end-of-year") {
-    return new Date(ref.getFullYear(), 11, 31, 23, 59, 59);
+    return atEndOfDay(new Date(ref.getFullYear(), DECEMBER, 31));
   }
   if (s === "next week") {
     const d = startOfDay(ref);
-    const startOfWeekDay = (endOfWeekDay + 1) % 7;
-    const daysIntoWeek = (d.getDay() - startOfWeekDay + 7) % 7;
-    d.setDate(d.getDate() - daysIntoWeek + 7);
+    const startOfWeekDay = (endOfWeekDay + 1) % DAYS_PER_WEEK;
+    const daysIntoWeek = (d.getDay() - startOfWeekDay + DAYS_PER_WEEK) % DAYS_PER_WEEK;
+    d.setDate(d.getDate() - daysIntoWeek + DAYS_PER_WEEK);
     return d;
   }
   if (s === "next month") {
     return new Date(ref.getFullYear(), ref.getMonth() + 1, 1);
   }
   if (s === "next year") {
-    return new Date(ref.getFullYear() + 1, 0, 1);
+    return new Date(ref.getFullYear() + 1, JANUARY, 1);
   }
   const weekdayMatch = s.match(
-    /^(next\s+)?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)$/
+    new RegExp(`^(next\\s+)?(${WEEKDAY_RE})$`)
   );
   if (weekdayMatch) {
     const hasNext = !!weekdayMatch[1];
@@ -219,9 +237,9 @@ function parseAbsoluteDate(str, ref, endOfDayHour, endOfWeekDay) {
     const today = startOfDay(ref);
     let diff = target - today.getDay();
     if (diff <= 0)
-      diff += 7;
+      diff += DAYS_PER_WEEK;
     if (hasNext)
-      diff += 7;
+      diff += DAYS_PER_WEEK;
     const d = new Date(today);
     d.setDate(d.getDate() + diff);
     return d;
@@ -236,7 +254,7 @@ function parseAbsoluteDate(str, ref, endOfDayHour, endOfWeekDay) {
     return new Date(year, parseInt(slashMatch[1]) - 1, parseInt(slashMatch[2]));
   }
   const monthMatch = s.match(
-    /^(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sep|sept|october|oct|november|nov|december|dec)\s+(\d{1,2})(?:st|nd|rd|th)?(?:[,\s]+(\d{4}))?$/
+    new RegExp(`^(${MONTH_RE})\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:[,\\s]+(\\d{4}))?$`)
   );
   if (monthMatch) {
     const month = MONTH_NAMES[monthMatch[1]];
@@ -264,9 +282,7 @@ function parseDueDate(text, referenceDate = new Date(), endOfDayHour = 17, endOf
 }
 function getDueDateStatus(date) {
   const now = new Date();
-  const today = startOfDay(now);
-  const d = startOfDay(date);
-  const diff = Math.round((d.getTime() - today.getTime()) / (1e3 * 60 * 60 * 24));
+  const diff = daysDiff(date, now);
   if (diff < 0)
     return "overdue";
   if (diff === 0) {
@@ -275,23 +291,23 @@ function getDueDateStatus(date) {
     }
     return "today";
   }
-  if (diff <= 7)
+  if (diff <= SOON_THRESHOLD_DAYS)
     return "soon";
   return "future";
 }
 function formatDueDate(date) {
-  const today = startOfDay(new Date());
+  const now = new Date();
   const d = startOfDay(date);
-  const diff = Math.round((d.getTime() - today.getTime()) / (1e3 * 60 * 60 * 24));
+  const diff = daysDiff(date, now);
   if (diff === 0)
     return "Today";
   if (diff === 1)
     return "Tomorrow";
   if (diff === -1)
     return "Yesterday";
-  if (diff > 1 && diff <= 6)
+  if (diff > 1 && diff <= WEEKDAY_DISPLAY_DAYS)
     return d.toLocaleDateString("en-US", { weekday: "long" });
-  if (d.getFullYear() === today.getFullYear()) {
+  if (d.getFullYear() === now.getFullYear()) {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
