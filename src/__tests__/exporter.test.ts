@@ -7,7 +7,6 @@ import { DEFAULT_SETTINGS, NotePackSettings, Todo } from "../types";
 
 const baseSettings: NotePackSettings = {
   ...DEFAULT_SETTINGS,
-  baseFolders: ["notes"],
   teamFolder: "Team",
   anchorHeadingLevel: "##",
   todoAnchorTitle: "Open Todos",
@@ -71,11 +70,18 @@ function buildMockApp(opts: {
     tfolders[path] = folder;
   }
 
+  const rootFolder = makeFolder("/");
+  // Only top-level folders go under root (folders without a "/" in their path)
+  rootFolder.children = Object.values(tfolders).filter(
+    (f) => !f.path.includes("/")
+  );
+
   const vault = {
     getAbstractFileByPath: (path: string) =>
       tfiles[path] ?? tfolders[path] ?? null,
     getMarkdownFiles: () =>
       markdownFiles ?? Object.values(tfiles).filter((f) => f.extension === "md"),
+    getRoot: () => rootFolder,
     read: jest.fn(async (file: TFile) => files[file.path] ?? ""),
     modify: jest.fn(async (file: TFile, content: string) => {
       modifyCalls.push({ path: file.path, content });
@@ -409,14 +415,10 @@ describe("TodoExporter – relative encoded paths in grouped todos", () => {
 // ─── exportTodosForFolders ────────────────────────────────────────────────────
 
 describe("TodoExporter.exportTodosForFolders", () => {
-  it("returns 0 when baseFolders is empty", async () => {
+  it("returns 0 when vault has no subfolders with READMEs", async () => {
     const { app } = buildMockApp({});
     const idx = buildIndexStub({});
-    const exporter = new TodoExporter(
-      app,
-      { ...baseSettings, baseFolders: [] },
-      idx
-    );
+    const exporter = new TodoExporter(app, baseSettings, idx);
     const result = await exporter.exportTodosForFolders();
     expect(result).toBe(0);
   });
@@ -445,11 +447,7 @@ describe("TodoExporter.exportTodosForFolders", () => {
     const idx = buildIndexStub({
       folderTodos: { "notes/projects": [todo] },
     });
-    const exporter = new TodoExporter(
-      app,
-      { ...baseSettings, baseFolders: ["notes"] },
-      idx
-    );
+    const exporter = new TodoExporter(app, baseSettings, idx);
     await exporter.exportTodosForFolders();
     expect(modifyCalls.some((c) => c.path === "notes/projects/README.md")).toBe(true);
   });
@@ -470,11 +468,7 @@ describe("TodoExporter.exportTodosForFolders", () => {
       },
     });
     const idx = buildIndexStub({});
-    const exporter = new TodoExporter(
-      app,
-      { ...baseSettings, baseFolders: ["notes"] },
-      idx
-    );
+    const exporter = new TodoExporter(app, baseSettings, idx);
     await exporter.exportTodosForFolders();
     expect(modifyCalls).toHaveLength(0);
   });

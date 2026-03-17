@@ -367,14 +367,7 @@ export class TodoIndex {
     // Skip archive folders
     if (file.path.toLowerCase().includes("archive")) return false;
 
-    // If no baseFolders configured, scan entire vault
-    if (this.settings.baseFolders.length === 0) return true;
-
-    // Check if file is in any base folder or the team folder
-    return (
-      this.settings.baseFolders.some((f) => file.path.startsWith(f + "/") || file.path.startsWith(f)) ||
-      file.path.startsWith(this.settings.teamFolder + "/")
-    );
+    return true;
   }
 
   private isReadme(file: TFile): boolean {

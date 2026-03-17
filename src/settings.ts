@@ -17,24 +17,6 @@ export class NotePackSettingTab extends PluginSettingTab {
     containerEl.createEl("h2", { text: "NotePack Settings" });
 
     new Setting(containerEl)
-      .setName("Base folders")
-      .setDesc(
-        "Comma-separated list of folder paths to scan for todos. Leave empty to scan the entire vault."
-      )
-      .addText((text) =>
-        text
-          .setPlaceholder("Notes, Projects")
-          .setValue(this.plugin.settings.baseFolders.join(", "))
-          .onChange(async (value) => {
-            this.plugin.settings.baseFolders = value
-              .split(",")
-              .map((s) => s.trim())
-              .filter((s) => s.length > 0);
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(containerEl)
       .setName("Team folder")
       .setDesc(
         "Path to the folder containing team member subfolders, each with a README.md."
