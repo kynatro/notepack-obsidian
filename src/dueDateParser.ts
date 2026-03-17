@@ -26,7 +26,7 @@ const WEEKDAY_NAMES: Record<string, number> = {
 // Simple date expressions valid after "eod" in a compound like "EOD Monday"
 const SIMPLE_DATE =
   `today|tomorrow` +
-  `|next\\s+(?:month|year)` +
+  `|next\\s+(?:week|month|year)` +
   `|end[\\s\\-]of[\\s\\-]next[\\s\\-](?:week|month|year)` +
   `|end[\\s\\-]of[\\s\\-](?:week|month|year)` +
   `|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed` +
@@ -48,7 +48,7 @@ const DATE_CHUNK =
   `|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)` +
   `\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?` +                  // March 15 [, 2024]
   `|today|tomorrow` +
-  `|next\\s+(?:month|year)` +                                          // next month / next year
+  `|next\\s+(?:week|month|year)` +                                      // next week / next month / next year
   `|(?:next\\s+)?(?:monday|mon|tuesday|tue|wednesday|wed` +
   `|thursday|thu|friday|fri|saturday|sat|sunday|sun)` +                // [next] weekday
   `|eod\\s+(?:${SIMPLE_DATE})` +                                       // EOD compound: "EOD Monday"
@@ -132,6 +132,15 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
   // EOY / end of year → December 31 at 23:59:59
   if (s === "eoy" || s === "end of year" || s === "end-of-year") {
     return new Date(ref.getFullYear(), 11, 31, 23, 59, 59);
+  }
+
+  // next week → first day of next week, where the week starts the day after endOfWeekDay
+  if (s === "next week") {
+    const d = startOfDay(ref);
+    const startOfWeekDay = (endOfWeekDay + 1) % 7;
+    const daysIntoWeek = (d.getDay() - startOfWeekDay + 7) % 7;
+    d.setDate(d.getDate() - daysIntoWeek + 7);
+    return d;
   }
 
   // next month → first day of next month

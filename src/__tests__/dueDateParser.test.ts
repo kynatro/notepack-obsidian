@@ -164,6 +164,45 @@ describe("parseDueDate – weekdays (REF = Thursday Mar 5)", () => {
   });
 });
 
+// ─── parseDueDate – next week ─────────────────────────────────────────────────
+
+describe("parseDueDate – next week (REF = Thursday Mar 5)", () => {
+  // Default endOfWeekDay=6 (Saturday) → week starts on Sunday (day 0)
+  // Current week: Sun Mar 1 – Sat Mar 7 → next week starts Sun Mar 8
+
+  it("'next week' resolves to the first day of next week (Sunday with EOW=Sat)", () => {
+    expect(parseDueDate("due next week", REF)).toEqual(d(2026, 3, 8));
+  });
+
+  it("'next week' from a Monday still resolves to the same next-week start", () => {
+    const monday = new Date(2026, 2, 2); // Mon Mar 2 — same week as REF
+    expect(parseDueDate("due next week", monday)).toEqual(d(2026, 3, 8));
+  });
+
+  it("'next week' from a Sunday (start of week) advances a full week", () => {
+    const sunday = new Date(2026, 2, 8); // Sun Mar 8 — first day of next week
+    expect(parseDueDate("due next week", sunday)).toEqual(d(2026, 3, 15));
+  });
+
+  it("'next week' respects custom endOfWeekDay (Friday → week starts Saturday)", () => {
+    // EOW=Friday(5) → startOfWeek=Saturday(6)
+    // From Thu Mar 5 (getDay=4): 6 days into week (Sat Mar 1 start) → next week = Sat Mar 7
+    // Wait: daysIntoWeek = (4 - 6 + 7) % 7 = 5; start of current week = Mar 5-5 = Feb 28
+    // next week = Feb 28 + 7 = Mar 7
+    expect(parseDueDate("due next week", REF, 17, 5)).toEqual(d(2026, 3, 7));
+  });
+
+  it("works with 'by' trigger phrase", () => {
+    expect(parseDueDate("by next week", REF)).toEqual(d(2026, 3, 8));
+  });
+
+  it("'EOD next week' resolves to start of next week at endOfDayHour", () => {
+    expect(parseDueDate("due EOD next week", REF, 17, 6)).toEqual(
+      d(2026, 3, 8, 17)
+    );
+  });
+});
+
 // ─── parseDueDate – next month / next year ────────────────────────────────────
 
 describe("parseDueDate – next month / next year (REF = Thursday Mar 5)", () => {
