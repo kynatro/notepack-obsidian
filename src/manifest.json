@@ -1,7 +1,7 @@
 {
   "id": "notepack",
   "name": "NotePack",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "minAppVersion": "1.0.0",
   "description": "Todo collation with team management. Scans markdown files for todos, assigns them via @mentions, and provides organized views.",
   "author": "Dave Shepard",
