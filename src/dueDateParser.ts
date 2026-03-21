@@ -42,6 +42,7 @@ const SLASH_DATE_RE = `\\d{1,2}\\/\\d{1,2}(?:\\/\\d{4})?`;
 const MONTH_DAY_RE = `(?:${MONTH_RE})\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?`;
 const NEXT_PERIOD_RE = `next\\s+(?:week|month|year)`;
 const END_OF_NEXT_RE = `end[\\s\\-]of[\\s\\-]next[\\s\\-](?:week|month|year)`;
+const END_OF_MONTH_NAME_RE = `end[\\s\\-]of[\\s\\-](?:${MONTH_RE})`;
 const OPTIONAL_NEXT_WEEKDAY_RE = `(?:next\\s+)?(?:${WEEKDAY_RE})`;
 
 // Simple date expressions valid after "eod" in a compound like "EOD Monday"
@@ -50,6 +51,7 @@ const SIMPLE_DATE =
   `|${NEXT_PERIOD_RE}` +
   `|${END_OF_NEXT_RE}` +
   `|end[\\s\\-]of[\\s\\-](?:week|month|year)` +
+  `|${END_OF_MONTH_NAME_RE}` +
   `|${OPTIONAL_NEXT_WEEKDAY_RE}` +
   `|${ISO_DATE_RE}` +
   `|${SLASH_DATE_RE}` +
@@ -68,6 +70,7 @@ const DATE_CHUNK =
   `|eod|eow|eom|eoq|eoy` +                                             // abbreviations (compound before standalone)
   `|${END_OF_NEXT_RE}` +                                                // end of next week/month/year
   `|end[\\s\\-]of[\\s\\-](?:day|week|month|quarter|year)` +            // spelled out
+  `|${END_OF_MONTH_NAME_RE}` +                                         // end of March
   `)`;
 
 const DUE_PATTERNS = [
@@ -139,6 +142,13 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
   // EOM / end of month → last day of the reference date's month at 23:59:59
   if (s === "eom" || s === "end of month" || s === "end-of-month") {
     return atEndOfDay(new Date(ref.getFullYear(), ref.getMonth() + 1, 0));
+  }
+
+  // End of <month name> → last day of the named month at 23:59:59
+  const endOfMonthNameMatch = s.match(new RegExp(`^end[\\s-]of[\\s-](${MONTH_RE})$`));
+  if (endOfMonthNameMatch) {
+    const month = MONTH_NAMES[endOfMonthNameMatch[1]];
+    return atEndOfDay(new Date(ref.getFullYear(), month + 1, 0));
   }
 
   // EOQ / end of quarter → last day of the reference date's quarter at 23:59:59
@@ -231,6 +241,9 @@ export function parseDateString(dateStr: string): Date {
  * so that a todo saying "by tomorrow" in an old note is flagged as overdue correctly.
  */
 export function parseDueDate(text: string, referenceDate: Date = new Date(), endOfDayHour = 17, endOfWeekDay = 6): Date | null {
+  // Strip Markdown inline formatting so that styled due dates are still recognized
+  text = text.replace(/\*{1,2}|_{1,2}|~{2}|`|={2}/g, "");
+
   for (const pattern of DUE_PATTERNS) {
     const match = text.match(pattern);
     if (match) {

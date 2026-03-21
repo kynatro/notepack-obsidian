@@ -108,6 +108,48 @@ describe("parseDueDate – absolute dates", () => {
   });
 });
 
+// ─── parseDueDate – Markdown formatting ─────────────────────────────────────
+
+describe("parseDueDate – strips Markdown formatting", () => {
+  it("parses bold-wrapped date", () => {
+    expect(parseDueDate("due by **tomorrow**", REF)).toEqual(d(2026, 3, 6));
+  });
+
+  it("parses italic-wrapped date", () => {
+    expect(parseDueDate("due by *tomorrow*", REF)).toEqual(d(2026, 3, 6));
+  });
+
+  it("parses underscore bold-wrapped date", () => {
+    expect(parseDueDate("due by __March 15__", REF)).toEqual(d(2026, 3, 15));
+  });
+
+  it("parses underscore italic-wrapped date", () => {
+    expect(parseDueDate("due by _Friday_", REF)).toEqual(d(2026, 3, 6));
+  });
+
+  it("parses strikethrough-wrapped date", () => {
+    expect(parseDueDate("due by ~~EOD~~", REF, 17)).toEqual(d(2026, 3, 5, 17));
+  });
+
+  it("parses inline code-wrapped date", () => {
+    expect(parseDueDate("due by `2026-03-15`", REF)).toEqual(d(2026, 3, 15));
+  });
+
+  it("parses highlight-wrapped date (Obsidian ==)", () => {
+    expect(parseDueDate("due by ==end of month==", REF)).toEqual(
+      d(2026, 3, 31, 23, 59, 59)
+    );
+  });
+
+  it("parses when entire phrase is bold", () => {
+    expect(parseDueDate("**due by tomorrow**", REF)).toEqual(d(2026, 3, 6));
+  });
+
+  it("parses when entire phrase is italic", () => {
+    expect(parseDueDate("*due by March 15*", REF)).toEqual(d(2026, 3, 15));
+  });
+});
+
 // ─── parseDueDate – relative dates ──────────────────────────────────────────
 
 describe("parseDueDate – relative dates (resolved against REF)", () => {
@@ -376,6 +418,91 @@ describe("parseDueDate – EO* keywords (REF = Thursday Mar 5)", () => {
   it("'end of year' phrase resolves same as EOY", () => {
     expect(parseDueDate("by end of year", REF)).toEqual(
       d(2026, 12, 31, 23, 59, 59)
+    );
+  });
+});
+
+// ─── parseDueDate – end of <month name> ─────────────────────────────────────
+
+describe("parseDueDate – end of <month name> (REF = Thursday Mar 5)", () => {
+  it("'end of March' resolves to March 31 at 23:59:59", () => {
+    expect(parseDueDate("due by end of March", REF)).toEqual(
+      d(2026, 3, 31, 23, 59, 59)
+    );
+  });
+
+  it("'end of February' resolves to Feb 28 (non-leap year)", () => {
+    expect(parseDueDate("due by end of February", REF)).toEqual(
+      d(2026, 2, 28, 23, 59, 59)
+    );
+  });
+
+  it("'end of February' in a leap year resolves to Feb 29", () => {
+    const leapRef = d(2024, 1, 15);
+    expect(parseDueDate("due by end of February", leapRef)).toEqual(
+      d(2024, 2, 29, 23, 59, 59)
+    );
+  });
+
+  it("'end of December' resolves to Dec 31", () => {
+    expect(parseDueDate("due by end of December", REF)).toEqual(
+      d(2026, 12, 31, 23, 59, 59)
+    );
+  });
+
+  it("'end of April' resolves to April 30", () => {
+    expect(parseDueDate("by end of April", REF)).toEqual(
+      d(2026, 4, 30, 23, 59, 59)
+    );
+  });
+
+  it("works with abbreviated month name 'end of Mar'", () => {
+    expect(parseDueDate("due by end of Mar", REF)).toEqual(
+      d(2026, 3, 31, 23, 59, 59)
+    );
+  });
+
+  it("works with abbreviated month name 'end of Sep'", () => {
+    expect(parseDueDate("due by end of Sep", REF)).toEqual(
+      d(2026, 9, 30, 23, 59, 59)
+    );
+  });
+
+  it("is case insensitive", () => {
+    expect(parseDueDate("due by END OF MARCH", REF)).toEqual(
+      d(2026, 3, 31, 23, 59, 59)
+    );
+  });
+
+  it("works with hyphenated form 'end-of-March'", () => {
+    expect(parseDueDate("due by end-of-March", REF)).toEqual(
+      d(2026, 3, 31, 23, 59, 59)
+    );
+  });
+
+  it("uses reference year, not current year", () => {
+    const futureRef = d(2028, 6, 10);
+    expect(parseDueDate("due by end of January", futureRef)).toEqual(
+      d(2028, 1, 31, 23, 59, 59)
+    );
+  });
+
+  it("'end of month' still resolves to ref month (not a named month)", () => {
+    // Ensures the generic "end of month" pattern still takes priority
+    expect(parseDueDate("due end of month", REF)).toEqual(
+      d(2026, 3, 31, 23, 59, 59)
+    );
+  });
+
+  it("'EOD end of March' resolves to March 31 at endOfDayHour", () => {
+    expect(parseDueDate("due EOD end of March", REF, 17, 6)).toEqual(
+      d(2026, 3, 31, 17)
+    );
+  });
+
+  it("works with 'due' trigger", () => {
+    expect(parseDueDate("Prepare taxes due end of March", REF)).toEqual(
+      d(2026, 3, 31, 23, 59, 59)
     );
   });
 });
