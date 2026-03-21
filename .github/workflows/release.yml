@@ -60,7 +60,7 @@ jobs:
           } > RELEASE_NOTES.md
 
       - name: Create ZIP
-        run: zip -j "notepack-obsidian-${{ steps.version.outputs.version }}.zip" dist/*
+        run: zip -j "notepack-obsidian-${{ steps.version.outputs.version }}.zip" main.js manifest.json styles.css
 
       - name: Create or update release
         env:
@@ -77,6 +77,6 @@ jobs:
             --notes-file RELEASE_NOTES.md \
             --latest \
             "notepack-obsidian-${{ steps.version.outputs.version }}.zip" \
-            "dist/main.js" \
-            "dist/manifest.json" \
-            "dist/styles.css"
+            "main.js" \
+            "manifest.json" \
+            "styles.css"
