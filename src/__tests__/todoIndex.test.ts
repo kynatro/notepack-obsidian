@@ -280,6 +280,185 @@ describe("TodoIndex.removeFile", () => {
   });
 });
 
+// ─── file rename (removeFile + updateFile) ───────────────────────────────────
+
+describe("TodoIndex – file rename handling", () => {
+  it("preserves todos when a file is renamed", () => {
+    const app = buildMockApp({
+      "notes/old-name.md": "- [ ] Task A\n- [ ] Task B",
+    });
+    const idx = new TodoIndex(app, baseSettings);
+    idx.rebuild();
+    expect(idx.getAllTodos()).toHaveLength(2);
+
+    // Simulate rename: remove old path, re-index at new path
+    idx.removeFile("notes/old-name.md");
+
+    const newFile = new TFile("notes/new-name.md");
+    const content = "- [ ] Task A\n- [ ] Task B";
+    const cache = {
+      listItems: [
+        { task: " ", position: { start: { line: 0 } } },
+        { task: " ", position: { start: { line: 1 } } },
+      ],
+    };
+    idx.updateFile(newFile, content, cache as any);
+
+    const todos = idx.getAllTodos();
+    expect(todos).toHaveLength(2);
+    expect(todos.map((t) => t.text)).toContain("Task A");
+    expect(todos.map((t) => t.text)).toContain("Task B");
+  });
+
+  it("updates file reference to new path after rename", () => {
+    const app = buildMockApp({
+      "notes/old.md": "- [ ] Task",
+    });
+    const idx = new TodoIndex(app, baseSettings);
+    idx.rebuild();
+    expect(idx.getAllTodos()[0].file.path).toBe("notes/old.md");
+
+    idx.removeFile("notes/old.md");
+
+    const newFile = new TFile("notes/new.md");
+    const content = "- [ ] Task";
+    const cache = {
+      listItems: [{ task: " ", position: { start: { line: 0 } } }],
+    };
+    idx.updateFile(newFile, content, cache as any);
+
+    expect(idx.getAllTodos()[0].file.path).toBe("notes/new.md");
+  });
+
+  it("updates group name when file is moved to a different folder", () => {
+    const app = buildMockApp({
+      "projects/alpha/note.md": "- [ ] Task",
+    });
+    const idx = new TodoIndex(app, baseSettings);
+    idx.rebuild();
+    expect(idx.getAllTodos()[0].groupName).toBe("alpha / note");
+
+    idx.removeFile("projects/alpha/note.md");
+
+    const newFile = new TFile("projects/beta/note.md");
+    const content = "- [ ] Task";
+    const cache = {
+      listItems: [{ task: " ", position: { start: { line: 0 } } }],
+    };
+    idx.updateFile(newFile, content, cache as any);
+
+    expect(idx.getAllTodos()[0].groupName).toBe("beta / note");
+  });
+
+  it("removes todos when file is moved into archive", () => {
+    const app = buildMockApp({
+      "notes/active.md": "- [ ] Task A",
+    });
+    const idx = new TodoIndex(app, baseSettings);
+    idx.rebuild();
+    expect(idx.getAllTodos()).toHaveLength(1);
+
+    idx.removeFile("notes/active.md");
+
+    const archivedFile = new TFile("archive/active.md");
+    const content = "- [ ] Task A";
+    const cache = {
+      listItems: [{ task: " ", position: { start: { line: 0 } } }],
+    };
+    idx.updateFile(archivedFile, content, cache as any);
+
+    expect(idx.getAllTodos()).toHaveLength(0);
+  });
+
+  it("picks up todos when file is moved out of archive", () => {
+    const app = buildMockApp({});
+    const idx = new TodoIndex(app, baseSettings);
+    idx.rebuild();
+    expect(idx.getAllTodos()).toHaveLength(0);
+
+    // Simulate file moved from archive to active folder
+    idx.removeFile("archive/old.md");
+
+    const newFile = new TFile("notes/restored.md");
+    const content = "- [ ] Restored task";
+    const cache = {
+      listItems: [{ task: " ", position: { start: { line: 0 } } }],
+    };
+    idx.updateFile(newFile, content, cache as any);
+
+    expect(idx.getAllTodos()).toHaveLength(1);
+    expect(idx.getAllTodos()[0].text).toBe("Restored task");
+  });
+
+  it("updates fileDate when renamed to a dated filename", () => {
+    const app = buildMockApp({
+      "notes/meeting.md": "- [ ] Task",
+    });
+    const idx = new TodoIndex(app, baseSettings);
+    idx.rebuild();
+    expect(idx.getAllTodos()[0].fileDate).toBeNull();
+
+    idx.removeFile("notes/meeting.md");
+
+    const newFile = new TFile("notes/2026-03-21.md");
+    const content = "- [ ] Task";
+    const cache = {
+      listItems: [{ task: " ", position: { start: { line: 0 } } }],
+    };
+    idx.updateFile(newFile, content, cache as any);
+
+    expect(idx.getAllTodos()[0].fileDate).toBe("2026-03-21");
+  });
+
+  it("does not leave stale entries at the old path", () => {
+    const app = buildMockApp({
+      "notes/a.md": "- [ ] Task A",
+      "notes/b.md": "- [ ] Task B",
+    });
+    const idx = new TodoIndex(app, baseSettings);
+    idx.rebuild();
+    expect(idx.getAllTodos()).toHaveLength(2);
+
+    // Rename a.md → c.md
+    idx.removeFile("notes/a.md");
+
+    const newFile = new TFile("notes/c.md");
+    const content = "- [ ] Task A";
+    const cache = {
+      listItems: [{ task: " ", position: { start: { line: 0 } } }],
+    };
+    idx.updateFile(newFile, content, cache as any);
+
+    // Should still be 2 total, none from old path
+    expect(idx.getAllTodos()).toHaveLength(2);
+    expect(idx.getTodosInFolder("notes/a.md")).toHaveLength(0);
+    expect(idx.getAllTodos().every((t) => t.file.path !== "notes/a.md")).toBe(true);
+  });
+
+  it("notifies listeners for both remove and re-index", () => {
+    const app = buildMockApp({
+      "notes/old.md": "- [ ] Task",
+    });
+    const idx = new TodoIndex(app, baseSettings);
+    idx.rebuild();
+
+    const cb = jest.fn();
+    idx.onChange(cb);
+
+    idx.removeFile("notes/old.md");
+
+    const newFile = new TFile("notes/new.md");
+    const content = "- [ ] Task";
+    const cache = {
+      listItems: [{ task: " ", position: { start: { line: 0 } } }],
+    };
+    idx.updateFile(newFile, content, cache as any);
+
+    // Once for removeFile, once for updateFile
+    expect(cb).toHaveBeenCalledTimes(2);
+  });
+});
+
 // ─── getAllTodos / sorting ────────────────────────────────────────────────────
 
 describe("TodoIndex.getAllTodos", () => {
