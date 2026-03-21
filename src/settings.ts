@@ -29,11 +29,12 @@ export class NotePackSettingTab extends PluginSettingTab {
           })
       );
 
-    containerEl.createEl("h3", { text: "Export" });
-    containerEl.createEl("p", {
-      text: 'These settings control the "NotePack: Export" command which writes todos and recent files into README.md files.',
-      cls: "setting-item-description",
-    });
+    new Setting(containerEl)
+      .setHeading()
+      .setName("Export")
+      .setDesc(
+        'These settings control the "NotePack: Export" command which writes todos and recent files into README.md files.'
+      );
 
     new Setting(containerEl)
       .setName("Todo section title")
@@ -116,7 +117,7 @@ export class NotePackSettingTab extends PluginSettingTab {
           })
       );
 
-    containerEl.createEl("h3", { text: "Due Dates" });
+    new Setting(containerEl).setHeading().setName("Due dates");
 
     new Setting(containerEl)
       .setName("End of day")

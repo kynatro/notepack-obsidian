@@ -216,7 +216,7 @@ export class TeamTodosView extends ItemView {
       cls: "notepack-assignee",
     });
     // Hide the assignee badge when filtering to a single member (redundant)
-    if (this.selectedMember) assignee.style.display = "none";
+    if (this.selectedMember) assignee.addClass("notepack-hidden");
 
     const text = li.createSpan({ cls: "notepack-todo-text" });
     // Strip the @mention prefix since we show the assignee separately
