@@ -241,6 +241,9 @@ export function parseDateString(dateStr: string): Date {
  * so that a todo saying "by tomorrow" in an old note is flagged as overdue correctly.
  */
 export function parseDueDate(text: string, referenceDate: Date = new Date(), endOfDayHour = 17, endOfWeekDay = 6): Date | null {
+  // Strip Markdown inline formatting so that styled due dates are still recognized
+  text = text.replace(/\*{1,2}|_{1,2}|~{2}|`|={2}/g, "");
+
   for (const pattern of DUE_PATTERNS) {
     const match = text.match(pattern);
     if (match) {

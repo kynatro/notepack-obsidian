@@ -108,6 +108,48 @@ describe("parseDueDate – absolute dates", () => {
   });
 });
 
+// ─── parseDueDate – Markdown formatting ─────────────────────────────────────
+
+describe("parseDueDate – strips Markdown formatting", () => {
+  it("parses bold-wrapped date", () => {
+    expect(parseDueDate("due by **tomorrow**", REF)).toEqual(d(2026, 3, 6));
+  });
+
+  it("parses italic-wrapped date", () => {
+    expect(parseDueDate("due by *tomorrow*", REF)).toEqual(d(2026, 3, 6));
+  });
+
+  it("parses underscore bold-wrapped date", () => {
+    expect(parseDueDate("due by __March 15__", REF)).toEqual(d(2026, 3, 15));
+  });
+
+  it("parses underscore italic-wrapped date", () => {
+    expect(parseDueDate("due by _Friday_", REF)).toEqual(d(2026, 3, 6));
+  });
+
+  it("parses strikethrough-wrapped date", () => {
+    expect(parseDueDate("due by ~~EOD~~", REF, 17)).toEqual(d(2026, 3, 5, 17));
+  });
+
+  it("parses inline code-wrapped date", () => {
+    expect(parseDueDate("due by `2026-03-15`", REF)).toEqual(d(2026, 3, 15));
+  });
+
+  it("parses highlight-wrapped date (Obsidian ==)", () => {
+    expect(parseDueDate("due by ==end of month==", REF)).toEqual(
+      d(2026, 3, 31, 23, 59, 59)
+    );
+  });
+
+  it("parses when entire phrase is bold", () => {
+    expect(parseDueDate("**due by tomorrow**", REF)).toEqual(d(2026, 3, 6));
+  });
+
+  it("parses when entire phrase is italic", () => {
+    expect(parseDueDate("*due by March 15*", REF)).toEqual(d(2026, 3, 15));
+  });
+});
+
 // ─── parseDueDate – relative dates ──────────────────────────────────────────
 
 describe("parseDueDate – relative dates (resolved against REF)", () => {
