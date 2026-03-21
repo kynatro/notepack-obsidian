@@ -1,6 +1,6 @@
 import { App, FuzzySuggestModal } from "obsidian";
-import { TeamMember, NotePackSettings } from "./types";
-import { getTeamMembers } from "./team";
+import { TeamMember, NotePackSettings } from "../types";
+import { getTeamMembers } from "../utility/team";
 
 /**
  * Modal that presents a fuzzy-searchable list of team members.

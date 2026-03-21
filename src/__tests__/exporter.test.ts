@@ -1,6 +1,6 @@
 import { App, TFile, TFolder } from "obsidian";
-import { TodoExporter } from "../exporter";
-import { TodoIndex } from "../todoIndex";
+import { TodoExporter } from "../lib/todoExporter";
+import { TodoIndex } from "../lib/todoIndex";
 import { DEFAULT_SETTINGS, NotePackSettings, Todo } from "../types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

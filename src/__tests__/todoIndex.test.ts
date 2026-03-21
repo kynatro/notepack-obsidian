@@ -1,5 +1,5 @@
 import { App, TFile, TFolder } from "obsidian";
-import { TodoIndex } from "../todoIndex";
+import { TodoIndex } from "../lib/todoIndex";
 import { DEFAULT_SETTINGS, NotePackSettings } from "../types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

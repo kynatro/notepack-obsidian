@@ -1,7 +1,7 @@
 import { App, TFile, TFolder, Notice, normalizePath } from "obsidian";
-import { Todo, NotePackSettings } from "./types";
+import { Todo, NotePackSettings } from "../types";
 import { TodoIndex } from "./todoIndex";
-import { getTeamMembers } from "./team";
+import { getTeamMembers } from "../utility/team";
 
 /**
  * Handles exporting / syncing todos and recent files into README.md files.

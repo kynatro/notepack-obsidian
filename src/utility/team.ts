@@ -1,5 +1,5 @@
 import { App, TFile, TFolder, normalizePath } from "obsidian";
-import { TeamMember, NotePackSettings } from "./types";
+import { TeamMember, NotePackSettings } from "../types";
 
 /**
  * Format an alias for case-insensitive, dot-delimited matching.

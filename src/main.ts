@@ -6,13 +6,13 @@ import {
   VIEW_TYPE_TEAM_TODOS,
   VIEW_TYPE_RECENT_FILES,
 } from "./types";
-import { TodoIndex } from "./todoIndex";
-import { TodoExporter } from "./exporter";
+import { TodoIndex } from "./lib/todoIndex";
+import { TodoExporter } from "./lib/todoExporter";
 import { NotePackSettingTab } from "./settings";
-import { MyTodosView } from "./myTodosView";
-import { TeamTodosView } from "./teamTodosView";
-import { RecentFilesView } from "./recentFilesView";
-import { TeamMemberModal } from "./teamMemberModal";
+import { MyTodosView } from "./views/myTodosView";
+import { TeamTodosView } from "./views/teamTodosView";
+import { RecentFilesView } from "./views/recentFilesView";
+import { TeamMemberModal } from "./modals/teamMemberModal";
 
 export default class NotePackPlugin extends Plugin {
   settings: NotePackSettings = DEFAULT_SETTINGS;

@@ -3,7 +3,7 @@ import {
   getDueDateStatus,
   formatDueDate,
   parseDateString,
-} from "../dueDateParser";
+} from "../utility/dueDateParser";
 
 // Fixed reference date: Thursday, March 5, 2026 at noon
 const REF = new Date(2026, 2, 5, 12, 0, 0);

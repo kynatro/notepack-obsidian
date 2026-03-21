@@ -1,44 +1,27 @@
 import { ItemView, WorkspaceLeaf, MarkdownRenderer } from "obsidian";
-import { VIEW_TYPE_TEAM_TODOS, Todo, NotePackSettings } from "./types";
-import { TodoIndex } from "./todoIndex";
-import { getTeamMembers } from "./team";
-import { getDueDateStatus, formatDueDate } from "./dueDateParser";
+import { VIEW_TYPE_MY_TODOS, Todo } from "../types";
+import { TodoIndex } from "../lib/todoIndex";
+import { getDueDateStatus, formatDueDate } from "../utility/dueDateParser";
 
-export class TeamTodosView extends ItemView {
+export class MyTodosView extends ItemView {
   private todoIndex: TodoIndex;
-  private settings: NotePackSettings;
-  private selectedMember: string | null = null;
   private unsubscribe: (() => void) | null = null;
 
-  constructor(
-    leaf: WorkspaceLeaf,
-    todoIndex: TodoIndex,
-    settings: NotePackSettings
-  ) {
+  constructor(leaf: WorkspaceLeaf, todoIndex: TodoIndex) {
     super(leaf);
     this.todoIndex = todoIndex;
-    this.settings = settings;
   }
 
   getViewType(): string {
-    return VIEW_TYPE_TEAM_TODOS;
+    return VIEW_TYPE_MY_TODOS;
   }
 
   getDisplayText(): string {
-    return "Team Todos";
+    return "My Todos";
   }
 
   getIcon(): string {
-    return "users";
-  }
-
-  updateSettings(settings: NotePackSettings): void {
-    this.settings = settings;
-  }
-
-  setSelectedMember(name: string | null): void {
-    this.selectedMember = name;
-    this.render();
+    return "check-square";
   }
 
   async onOpen(): Promise<void> {
@@ -56,61 +39,19 @@ export class TeamTodosView extends ItemView {
   private render(): void {
     const container = this.containerEl.children[1] as HTMLElement;
     container.empty();
+
     container.addClass("notepack-view");
 
     const header = container.createDiv({ cls: "notepack-view-header" });
-    header.createEl("h4", { text: "Team Todos" });
+    header.createEl("h4", { text: "My Todos" });
 
-    // Team member selector
-    const members = getTeamMembers(this.app, this.settings);
-
-    if (members.length === 0) {
-      container.createDiv({
-        cls: "notepack-empty",
-        text: `No team members found. Create subfolders with README.md files in your "${this.settings.teamFolder}" folder.`,
-      });
-      return;
-    }
-
-    const selectorRow = container.createDiv({ cls: "notepack-selector" });
-
-    // "All" button
-    const allBtn = selectorRow.createEl("button", {
-      text: "All",
-      cls: `notepack-member-btn ${this.selectedMember === null ? "is-active" : ""}`,
-    });
-    allBtn.addEventListener("click", () => {
-      this.selectedMember = null;
-      this.render();
-    });
-
-    for (const member of members) {
-      const btn = selectorRow.createEl("button", {
-        text: member.name,
-        cls: `notepack-member-btn ${this.selectedMember === member.name ? "is-active" : ""}`,
-      });
-      btn.addEventListener("click", () => {
-        this.selectedMember = member.name;
-        this.render();
-      });
-    }
-
-    // Todos display
-    let todos: Todo[];
-    if (this.selectedMember) {
-      todos = this.todoIndex.getTodosFor(this.selectedMember);
-    } else {
-      // Show all team-assigned todos (everything except "Me")
-      todos = this.todoIndex
-        .getAllTodos()
-        .filter((t) => t.assignedToAlias !== "Me");
-    }
+    const todos = this.todoIndex.getMyTodos();
 
     if (todos.length === 0) {
-      const msg = this.selectedMember
-        ? `No open todos assigned to ${this.selectedMember}.`
-        : "No open todos assigned to team members.";
-      container.createDiv({ cls: "notepack-empty", text: msg });
+      container.createDiv({
+        cls: "notepack-empty",
+        text: "No open todos assigned to you.",
+      });
       return;
     }
 
@@ -194,7 +135,8 @@ export class TeamTodosView extends ItemView {
       });
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        this.app.workspace.getLeaf(false).openFile(groupTodos[0].file);
+        const file = groupTodos[0].file;
+        this.app.workspace.getLeaf(false).openFile(file);
       });
 
       const list = groupEl.createEl("ul", { cls: "notepack-todo-list" });
@@ -209,19 +151,12 @@ export class TeamTodosView extends ItemView {
 
     const checkbox = li.createEl("input", { type: "checkbox" });
     checkbox.addClass("notepack-checkbox");
-    checkbox.addEventListener("change", () => this.checkOffTodo(todo));
-
-    const assignee = li.createSpan({
-      text: todo.assignedToAlias,
-      cls: "notepack-assignee",
+    checkbox.addEventListener("change", () => {
+      this.checkOffTodo(todo);
     });
-    // Hide the assignee badge when filtering to a single member (redundant)
-    if (this.selectedMember) assignee.style.display = "none";
 
     const text = li.createSpan({ cls: "notepack-todo-text" });
-    // Strip the @mention prefix since we show the assignee separately
-    const cleanText = todo.text.replace(/^@[A-Za-z.]+\s*/, "");
-    MarkdownRenderer.renderMarkdown(cleanText, text, todo.file.path, this);
+    MarkdownRenderer.renderMarkdown(todo.text, text, todo.file.path, this);
 
     if (todo.dueDate) {
       const status = getDueDateStatus(todo.dueDate);
@@ -232,6 +167,9 @@ export class TeamTodosView extends ItemView {
     }
   }
 
+  /**
+   * Check off a todo in its source file by replacing `- [ ]` with `- [x]`.
+   */
   private async checkOffTodo(todo: Todo): Promise<void> {
     await this.app.vault.process(todo.file, (content) => {
       const lines = content.split("\n");

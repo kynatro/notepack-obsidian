@@ -1,7 +1,7 @@
 import { App, TFile, CachedMetadata, normalizePath } from "obsidian";
-import { Todo, NotePackSettings } from "./types";
-import { formatAlias, getTeamMemberAliases } from "./team";
-import { parseDueDate, parseDateString } from "./dueDateParser";
+import { Todo, NotePackSettings } from "../types";
+import { formatAlias, getTeamMemberAliases } from "../utility/team";
+import { parseDueDate, parseDateString } from "../utility/dueDateParser";
 
 /**
  * TodoIndex maintains an in-memory map of all unchecked todos across the vault.
