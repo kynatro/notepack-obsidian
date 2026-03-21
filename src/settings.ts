@@ -14,8 +14,6 @@ export class NotePackSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "NotePack Settings" });
-
     new Setting(containerEl)
       .setName("Team folder")
       .setDesc(
@@ -31,7 +29,7 @@ export class NotePackSettingTab extends PluginSettingTab {
           })
       );
 
-    containerEl.createEl("h3", { text: "Export Settings" });
+    containerEl.createEl("h3", { text: "Export" });
     containerEl.createEl("p", {
       text: 'These settings control the "NotePack: Export" command which writes todos and recent files into README.md files.',
       cls: "setting-item-description",
