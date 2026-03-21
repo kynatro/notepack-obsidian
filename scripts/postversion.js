@@ -34,11 +34,11 @@ async function run() {
     return;
   }
 
-  execSync(`get fetch origin main`);
+  execSync(`git fetch origin main`);
   execSync(`git checkout main`);
-  execSync(`get reset --hard origin/main`);
+  execSync(`git reset --hard origin/main`);
   execSync(`git merge dev`);
-  // execSync(`git push -u origin dev main`);
+  execSync(`git push -u origin dev main`);
   console.log(`Pushed branches dev, main`);
   execSync(`git checkout dev`);
 
