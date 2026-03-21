@@ -1,5 +1,5 @@
 import { App, TFile, TFolder } from "obsidian";
-import { formatAlias, getTeamMembers, getTeamMemberAliases } from "../team";
+import { formatAlias, getTeamMembers, getTeamMemberAliases } from "../utility/team";
 import { DEFAULT_SETTINGS, NotePackSettings } from "../types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

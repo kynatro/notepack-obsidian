@@ -1,7 +1,7 @@
-import { App, TFile, CachedMetadata } from "obsidian";
-import { Todo, NotePackSettings } from "./types";
-import { formatAlias, getTeamMemberAliases } from "./team";
-import { parseDueDate, parseDateString } from "./dueDateParser";
+import { App, TFile, CachedMetadata, normalizePath } from "obsidian";
+import { Todo, NotePackSettings } from "../types";
+import { formatAlias, getTeamMemberAliases } from "../utility/team";
+import { parseDueDate, parseDateString } from "../utility/dueDateParser";
 
 /**
  * TodoIndex maintains an in-memory map of all unchecked todos across the vault.
@@ -40,17 +40,17 @@ export class TodoIndex {
    * Full rebuild: clear everything and re-index all markdown files.
    * Called on plugin load and when settings change.
    */
-  rebuild(): void {
+  async rebuild(): Promise<void> {
     this.index.clear();
     this.nextId = 1;
     this.aliasMap = getTeamMemberAliases(this.app, this.settings);
 
     const files = this.app.vault.getMarkdownFiles();
-    for (const file of files) {
-      if (this.isFileInScope(file) && !this.isReadme(file)) {
-        this.indexFile(file);
-      }
-    }
+    await Promise.all(
+      files
+        .filter((file) => this.isFileInScope(file) && !this.isReadme(file))
+        .map((file) => this.indexFile(file))
+    );
 
     this.notify();
   }
@@ -75,10 +75,10 @@ export class TodoIndex {
    * Incrementally update the index for a single file.
    * Called from the metadataCache 'changed' event handler.
    */
-  updateFile(file: TFile, _data?: string, cache?: CachedMetadata): void {
+  async updateFile(file: TFile, _data?: string, cache?: CachedMetadata): Promise<void> {
     if (this.isReadme(file)) {
       // If a team README changed, refresh aliases
-      if (file.path.startsWith(this.settings.teamFolder + "/")) {
+      if (file.path.startsWith(normalizePath(this.settings.teamFolder) + "/")) {
         this.refreshAliases();
       }
       return;
@@ -93,7 +93,7 @@ export class TodoIndex {
       return;
     }
 
-    this.indexFile(file, cache, _data);
+    await this.indexFile(file, cache, _data);
     this.notify();
   }
 
@@ -143,7 +143,7 @@ export class TodoIndex {
   getTodosInFolder(folderPath: string): Todo[] {
     const all: Todo[] = [];
     for (const [path, todos] of this.index) {
-      if (path.startsWith(folderPath + "/") || path === folderPath) {
+      if (path.startsWith(normalizePath(folderPath) + "/") || path === normalizePath(folderPath)) {
         all.push(...todos);
       }
     }
@@ -198,7 +198,7 @@ export class TodoIndex {
   /**
    * Index a single file by reading its cache (or fetching it).
    */
-  private indexFile(file: TFile, cache?: CachedMetadata, data?: string): void {
+  private async indexFile(file: TFile, cache?: CachedMetadata, data?: string): Promise<void> {
     const fileCache =
       cache || this.app.metadataCache.getFileCache(file);
 
@@ -216,10 +216,9 @@ export class TodoIndex {
       return;
     }
 
-    // Use provided data, or fall back to sync read
-    const content = data ?? this.getCachedContent(file);
-    if (content === null) {
-      // File content not available yet; skip and it will be indexed on next change
+    // Use provided data, or fall back to vault.cachedRead
+    const content = data ?? await this.app.vault.cachedRead(file);
+    if (!content) {
       this.index.set(file.path, []);
       return;
     }
@@ -258,106 +257,6 @@ export class TodoIndex {
     }
 
     this.index.set(file.path, todos);
-  }
-
-  /**
-   * Read file content synchronously from Obsidian's cache.
-   * Returns null if the file hasn't been cached yet.
-   */
-  private getCachedContent(file: TFile): string | null {
-    // Use cachedRead which returns from cache if available
-    // Since we need sync access, we use the vault's internal cache
-    // For the initial build, we rely on the metadataCache being resolved
-    try {
-      // @ts-ignore - accessing internal API for sync read
-      const content = this.app.vault.adapter.readSync?.(file.path);
-      if (content !== undefined) return content;
-    } catch {
-      // readSync may not exist on all platforms
-    }
-
-    // Fallback: try to read from the cache store
-    try {
-      // @ts-ignore
-      const cachedContent = this.app.vault.cachedRead?.(file);
-      if (typeof cachedContent === "string") return cachedContent;
-    } catch {
-      // Not available
-    }
-
-    return null;
-  }
-
-  /**
-   * Async version of file reading for the initial full build.
-   */
-  async indexFileAsync(file: TFile): Promise<void> {
-    if (this.isReadme(file) || !this.isFileInScope(file)) return;
-
-    const cache = this.app.metadataCache.getFileCache(file);
-    if (cache?.frontmatter?.excludeTodos) return;
-
-    const listItems = cache?.listItems;
-    if (!listItems || listItems.length === 0) {
-      this.index.set(file.path, []);
-      return;
-    }
-
-    const content = await this.app.vault.cachedRead(file);
-    const lines = content.split("\n");
-    const todos: Todo[] = [];
-    const fileDate = this.extractFileDate(file.name);
-    const refDate = fileDate ? parseDateString(fileDate) : new Date();
-
-    for (const item of listItems) {
-      if (item.task !== " ") continue;
-
-      const lineNum = item.position.start.line;
-      if (lineNum >= lines.length) continue;
-
-      const line = lines[lineNum];
-      const todoMatch = line.match(/^[\s]*-\s?\[ \]\s?(.*)/);
-      if (!todoMatch) continue;
-
-      const rawText = todoMatch[1].trim();
-      const assignedTo = this.getAssignment(rawText);
-      const assignedToAlias = this.resolveAlias(assignedTo);
-
-      todos.push({
-        id: this.nextId++,
-        file,
-        groupName: this.buildGroupName(file),
-        text: rawText,
-        assignedTo,
-        assignedToAlias,
-        fileMtime: file.stat.mtime,
-        fileDate,
-        lineNumber: lineNum,
-        dueDate: parseDueDate(rawText, refDate, this.settings.endOfDayHour, this.settings.endOfWeekDay),
-      });
-    }
-
-    this.index.set(file.path, todos);
-  }
-
-  /**
-   * Full async rebuild — reads files that need content access.
-   */
-  async rebuildAsync(): Promise<void> {
-    this.index.clear();
-    this.nextId = 1;
-    this.aliasMap = getTeamMemberAliases(this.app, this.settings);
-
-    const files = this.app.vault.getMarkdownFiles();
-    const toIndex = files.filter(
-      (f) => this.isFileInScope(f) && !this.isReadme(f)
-    );
-
-    for (const file of toIndex) {
-      await this.indexFileAsync(file);
-    }
-
-    this.notify();
   }
 
   /**

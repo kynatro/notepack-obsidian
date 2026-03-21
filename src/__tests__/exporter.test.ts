@@ -1,6 +1,6 @@
 import { App, TFile, TFolder } from "obsidian";
-import { TodoExporter } from "../exporter";
-import { TodoIndex } from "../todoIndex";
+import { TodoExporter } from "../lib/todoExporter";
+import { TodoIndex } from "../lib/todoIndex";
 import { DEFAULT_SETTINGS, NotePackSettings, Todo } from "../types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -84,6 +84,11 @@ function buildMockApp(opts: {
     getRoot: () => rootFolder,
     read: jest.fn(async (file: TFile) => files[file.path] ?? ""),
     modify: jest.fn(async (file: TFile, content: string) => {
+      modifyCalls.push({ path: file.path, content });
+      files[file.path] = content;
+    }),
+    process: jest.fn(async (file: TFile, fn: (data: string) => string) => {
+      const content = fn(files[file.path] ?? "");
       modifyCalls.push({ path: file.path, content });
       files[file.path] = content;
     }),

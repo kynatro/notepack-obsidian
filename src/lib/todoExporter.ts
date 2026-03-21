@@ -1,7 +1,7 @@
-import { App, TFile, TFolder, Notice } from "obsidian";
-import { Todo, NotePackSettings } from "./types";
+import { App, TFile, TFolder, Notice, normalizePath } from "obsidian";
+import { Todo, NotePackSettings } from "../types";
 import { TodoIndex } from "./todoIndex";
-import { getTeamMembers } from "./team";
+import { getTeamMembers } from "../utility/team";
 
 /**
  * Handles exporting / syncing todos and recent files into README.md files.
@@ -57,7 +57,7 @@ export class TodoExporter {
     if (assignedTo.toLowerCase() === "me") {
       readmePath = "README.md";
     } else {
-      readmePath = `${this.settings.teamFolder}/${assignedTo}/README.md`;
+      readmePath = normalizePath(`${this.settings.teamFolder}/${assignedTo}/README.md`);
     }
 
     const todos =
@@ -83,9 +83,9 @@ export class TodoExporter {
     for (const child of folder.children) {
       if (!(child instanceof TFolder)) continue;
       if (child.path.toLowerCase().includes("archive")) continue;
-      if (child.path.startsWith(this.settings.teamFolder + "/")) continue;
+      if (child.path.startsWith(normalizePath(this.settings.teamFolder) + "/")) continue;
 
-      const readmePath = `${child.path}/README.md`;
+      const readmePath = normalizePath(`${child.path}/README.md`);
       const readmeFile = this.app.vault.getAbstractFileByPath(readmePath);
 
       if (readmeFile instanceof TFile) {
@@ -127,9 +127,9 @@ export class TodoExporter {
 
     const content = `${anchor}\n${recentSection}\n`;
 
-    let src = await this.app.vault.read(readmeFile);
-    src = this.replaceSectionInSource(src, anchor, content);
-    await this.app.vault.modify(readmeFile, src);
+    await this.app.vault.process(readmeFile, (src) =>
+      this.replaceSectionInSource(src, anchor, content)
+    );
   }
 
   /**
@@ -161,9 +161,9 @@ export class TodoExporter {
     const anchor = `${this.settings.anchorHeadingLevel} ${this.settings.todoAnchorTitle}`;
     const todosContent = this.buildGroupedTodosString(todos, readmePath, anchor);
 
-    let src = await this.app.vault.read(file);
-    src = this.replaceSectionInSource(src, anchor, todosContent);
-    await this.app.vault.modify(file, src);
+    await this.app.vault.process(file, (src) =>
+      this.replaceSectionInSource(src, anchor, todosContent)
+    );
     return true;
   }
 

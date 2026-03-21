@@ -2,6 +2,11 @@
    NotePack Plugin Styles
    ============================================================ */
 
+/* Utility */
+.notepack-hidden {
+  display: none;
+}
+
 /* Shared view container */
 .notepack-view {
   padding: 8px 12px;

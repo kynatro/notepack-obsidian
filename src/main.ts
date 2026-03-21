@@ -1,4 +1,4 @@
-import { Plugin, TFile, TAbstractFile, WorkspaceLeaf, CachedMetadata, debounce } from "obsidian";
+import { Plugin, TFile, TAbstractFile, WorkspaceLeaf } from "obsidian";
 import {
   NotePackSettings,
   DEFAULT_SETTINGS,
@@ -6,20 +6,18 @@ import {
   VIEW_TYPE_TEAM_TODOS,
   VIEW_TYPE_RECENT_FILES,
 } from "./types";
-import { TodoIndex } from "./todoIndex";
-import { TodoExporter } from "./exporter";
+import { TodoIndex } from "./lib/todoIndex";
+import { TodoExporter } from "./lib/todoExporter";
 import { NotePackSettingTab } from "./settings";
-import { MyTodosView } from "./myTodosView";
-import { TeamTodosView } from "./teamTodosView";
-import { RecentFilesView } from "./recentFilesView";
-import { TeamMemberModal } from "./teamMemberModal";
+import { MyTodosView } from "./views/myTodosView";
+import { TeamTodosView } from "./views/teamTodosView";
+import { RecentFilesView } from "./views/recentFilesView";
+import { TeamMemberModal } from "./modals/teamMemberModal";
 
 export default class NotePackPlugin extends Plugin {
   settings: NotePackSettings = DEFAULT_SETTINGS;
   todoIndex: TodoIndex = null!;
   exporter: TodoExporter = null!;
-
-  private debouncedUpdate: ReturnType<typeof debounce> = null!;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -27,15 +25,6 @@ export default class NotePackPlugin extends Plugin {
     // Core engine
     this.todoIndex = new TodoIndex(this.app, this.settings);
     this.exporter = new TodoExporter(this.app, this.settings, this.todoIndex);
-
-    // Debounced handler for file changes
-    this.debouncedUpdate = debounce(
-      (file: TFile, data: string, cache: CachedMetadata) => {
-        this.todoIndex.updateFile(file, data, cache);
-      },
-      this.settings.debounceMs,
-      true
-    );
 
     // ---------------------------------------------------------------
     // Register views
@@ -99,7 +88,7 @@ export default class NotePackPlugin extends Plugin {
       id: "rebuild-index",
       name: "Rebuild todo index",
       callback: async () => {
-        await this.todoIndex.rebuildAsync();
+        await this.todoIndex.rebuild();
       },
     });
 
@@ -123,7 +112,7 @@ export default class NotePackPlugin extends Plugin {
     this.app.workspace.onLayoutReady(async () => {
       // If cache is already resolved, build immediately
       if (this.app.metadataCache.resolvedLinks) {
-        await this.todoIndex.rebuildAsync();
+        await this.todoIndex.rebuild();
       }
 
       // Also listen for the resolved event in case it hasn't fired yet
@@ -131,7 +120,7 @@ export default class NotePackPlugin extends Plugin {
         this.app.metadataCache.on("resolved", async () => {
           // Only rebuild if the index is empty (first time)
           if (this.todoIndex.getAllTodos().length === 0) {
-            await this.todoIndex.rebuildAsync();
+            await this.todoIndex.rebuild();
           }
         })
       );
@@ -140,7 +129,7 @@ export default class NotePackPlugin extends Plugin {
     // Incremental updates on file change
     this.registerEvent(
       this.app.metadataCache.on("changed", (file, data, cache) => {
-        this.debouncedUpdate(file, data, cache);
+        this.todoIndex.updateFile(file, data, cache);
       })
     );
 
@@ -197,15 +186,6 @@ export default class NotePackPlugin extends Plugin {
     this.todoIndex.updateSettings(this.settings);
     this.exporter.updateSettings(this.settings);
 
-    // Update debounce timing
-    this.debouncedUpdate = debounce(
-      (file: TFile, data: string, cache: CachedMetadata) => {
-        this.todoIndex.updateFile(file, data, cache);
-      },
-      this.settings.debounceMs,
-      true
-    );
-
     // Update existing views with new settings
     for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_TEAM_TODOS)) {
       (leaf.view as TeamTodosView).updateSettings(this.settings);
@@ -215,7 +195,7 @@ export default class NotePackPlugin extends Plugin {
     }
 
     // Rebuild index with new scope
-    await this.todoIndex.rebuildAsync();
+    await this.todoIndex.rebuild();
   }
 
   /**
