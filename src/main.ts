@@ -88,7 +88,7 @@ export default class NotePackPlugin extends Plugin {
       id: "rebuild-index",
       name: "Rebuild todo index",
       callback: async () => {
-        await this.todoIndex.rebuildAsync();
+        await this.todoIndex.rebuild();
       },
     });
 
@@ -112,7 +112,7 @@ export default class NotePackPlugin extends Plugin {
     this.app.workspace.onLayoutReady(async () => {
       // If cache is already resolved, build immediately
       if (this.app.metadataCache.resolvedLinks) {
-        await this.todoIndex.rebuildAsync();
+        await this.todoIndex.rebuild();
       }
 
       // Also listen for the resolved event in case it hasn't fired yet
@@ -120,7 +120,7 @@ export default class NotePackPlugin extends Plugin {
         this.app.metadataCache.on("resolved", async () => {
           // Only rebuild if the index is empty (first time)
           if (this.todoIndex.getAllTodos().length === 0) {
-            await this.todoIndex.rebuildAsync();
+            await this.todoIndex.rebuild();
           }
         })
       );
@@ -195,7 +195,7 @@ export default class NotePackPlugin extends Plugin {
     }
 
     // Rebuild index with new scope
-    await this.todoIndex.rebuildAsync();
+    await this.todoIndex.rebuild();
   }
 
   /**
