@@ -127,9 +127,9 @@ export class TodoExporter {
 
     const content = `${anchor}\n${recentSection}\n`;
 
-    let src = await this.app.vault.read(readmeFile);
-    src = this.replaceSectionInSource(src, anchor, content);
-    await this.app.vault.modify(readmeFile, src);
+    await this.app.vault.process(readmeFile, (src) =>
+      this.replaceSectionInSource(src, anchor, content)
+    );
   }
 
   /**
@@ -161,9 +161,9 @@ export class TodoExporter {
     const anchor = `${this.settings.anchorHeadingLevel} ${this.settings.todoAnchorTitle}`;
     const todosContent = this.buildGroupedTodosString(todos, readmePath, anchor);
 
-    let src = await this.app.vault.read(file);
-    src = this.replaceSectionInSource(src, anchor, todosContent);
-    await this.app.vault.modify(file, src);
+    await this.app.vault.process(file, (src) =>
+      this.replaceSectionInSource(src, anchor, todosContent)
+    );
     return true;
   }
 

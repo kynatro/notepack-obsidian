@@ -233,15 +233,15 @@ export class TeamTodosView extends ItemView {
   }
 
   private async checkOffTodo(todo: Todo): Promise<void> {
-    const content = await this.app.vault.read(todo.file);
-    const lines = content.split("\n");
-
-    if (todo.lineNumber < lines.length) {
-      lines[todo.lineNumber] = lines[todo.lineNumber].replace(
-        /- \[ \]/,
-        "- [x]"
-      );
-      await this.app.vault.modify(todo.file, lines.join("\n"));
-    }
+    await this.app.vault.process(todo.file, (content) => {
+      const lines = content.split("\n");
+      if (todo.lineNumber < lines.length) {
+        lines[todo.lineNumber] = lines[todo.lineNumber].replace(
+          /- \[ \]/,
+          "- [x]"
+        );
+      }
+      return lines.join("\n");
+    });
   }
 }

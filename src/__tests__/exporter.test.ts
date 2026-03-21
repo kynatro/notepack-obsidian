@@ -87,6 +87,11 @@ function buildMockApp(opts: {
       modifyCalls.push({ path: file.path, content });
       files[file.path] = content;
     }),
+    process: jest.fn(async (file: TFile, fn: (data: string) => string) => {
+      const content = fn(files[file.path] ?? "");
+      modifyCalls.push({ path: file.path, content });
+      files[file.path] = content;
+    }),
     cachedRead: jest.fn(async (file: TFile) => files[file.path] ?? ""),
     adapter: { readSync: (path: string) => files[path] },
   } as any;
