@@ -162,22 +162,5 @@ export class NotePackSettingTab extends PluginSettingTab {
           })
       );
 
-    containerEl.createEl("h3", { text: "Performance" });
-
-    new Setting(containerEl)
-      .setName("Debounce delay (ms)")
-      .setDesc(
-        "How long to wait after a file change before re-indexing. Lower values are more responsive but use more CPU."
-      )
-      .addSlider((slider) =>
-        slider
-          .setLimits(100, 2000, 100)
-          .setValue(this.plugin.settings.debounceMs)
-          .setDynamicTooltip()
-          .onChange(async (value) => {
-            this.plugin.settings.debounceMs = value;
-            await this.plugin.saveSettings();
-          })
-      );
   }
 }

@@ -42,7 +42,6 @@ export class ItemView {}
 export class WorkspaceLeaf {}
 export class PluginSettingTab {}
 export const MarkdownRenderer = { renderMarkdown: jest.fn() };
-export const debounce = (fn: (...args: any[]) => any) => fn;
 export const moment = (ts: number) => ({
   format: () => new Date(ts).toLocaleDateString(),
 });

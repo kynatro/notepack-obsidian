@@ -54,8 +54,6 @@ export interface NotePackSettings {
   todoGroupHeadingLevel: string;
   /** Number of recent files to show */
   recentFilesCount: number;
-  /** Debounce delay in ms for reindexing after file changes */
-  debounceMs: number;
   /** Hour (0–23) at which "end of day" is considered — used when parsing EOD due dates */
   endOfDayHour: number;
   /** Day of week (0=Sunday … 6=Saturday) considered the last day of the work week for EOW */
@@ -69,7 +67,6 @@ export const DEFAULT_SETTINGS: NotePackSettings = {
   anchorHeadingLevel: "##",
   todoGroupHeadingLevel: "####",
   recentFilesCount: 5,
-  debounceMs: 500,
   endOfDayHour: 17,
   endOfWeekDay: 6,
 };

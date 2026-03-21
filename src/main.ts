@@ -1,4 +1,4 @@
-import { Plugin, TFile, TAbstractFile, WorkspaceLeaf, CachedMetadata, debounce } from "obsidian";
+import { Plugin, TFile, TAbstractFile, WorkspaceLeaf } from "obsidian";
 import {
   NotePackSettings,
   DEFAULT_SETTINGS,
@@ -19,23 +19,12 @@ export default class NotePackPlugin extends Plugin {
   todoIndex: TodoIndex = null!;
   exporter: TodoExporter = null!;
 
-  private debouncedUpdate: ReturnType<typeof debounce> = null!;
-
   async onload(): Promise<void> {
     await this.loadSettings();
 
     // Core engine
     this.todoIndex = new TodoIndex(this.app, this.settings);
     this.exporter = new TodoExporter(this.app, this.settings, this.todoIndex);
-
-    // Debounced handler for file changes
-    this.debouncedUpdate = debounce(
-      (file: TFile, data: string, cache: CachedMetadata) => {
-        this.todoIndex.updateFile(file, data, cache);
-      },
-      this.settings.debounceMs,
-      true
-    );
 
     // ---------------------------------------------------------------
     // Register views
@@ -140,7 +129,7 @@ export default class NotePackPlugin extends Plugin {
     // Incremental updates on file change
     this.registerEvent(
       this.app.metadataCache.on("changed", (file, data, cache) => {
-        this.debouncedUpdate(file, data, cache);
+        this.todoIndex.updateFile(file, data, cache);
       })
     );
 
@@ -196,15 +185,6 @@ export default class NotePackPlugin extends Plugin {
     // Propagate settings changes to components
     this.todoIndex.updateSettings(this.settings);
     this.exporter.updateSettings(this.settings);
-
-    // Update debounce timing
-    this.debouncedUpdate = debounce(
-      (file: TFile, data: string, cache: CachedMetadata) => {
-        this.todoIndex.updateFile(file, data, cache);
-      },
-      this.settings.debounceMs,
-      true
-    );
 
     // Update existing views with new settings
     for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_TEAM_TODOS)) {
