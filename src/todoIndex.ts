@@ -1,4 +1,4 @@
-import { App, TFile, CachedMetadata } from "obsidian";
+import { App, TFile, CachedMetadata, normalizePath } from "obsidian";
 import { Todo, NotePackSettings } from "./types";
 import { formatAlias, getTeamMemberAliases } from "./team";
 import { parseDueDate, parseDateString } from "./dueDateParser";
@@ -78,7 +78,7 @@ export class TodoIndex {
   async updateFile(file: TFile, _data?: string, cache?: CachedMetadata): Promise<void> {
     if (this.isReadme(file)) {
       // If a team README changed, refresh aliases
-      if (file.path.startsWith(this.settings.teamFolder + "/")) {
+      if (file.path.startsWith(normalizePath(this.settings.teamFolder) + "/")) {
         this.refreshAliases();
       }
       return;
@@ -143,7 +143,7 @@ export class TodoIndex {
   getTodosInFolder(folderPath: string): Todo[] {
     const all: Todo[] = [];
     for (const [path, todos] of this.index) {
-      if (path.startsWith(folderPath + "/") || path === folderPath) {
+      if (path.startsWith(normalizePath(folderPath) + "/") || path === normalizePath(folderPath)) {
         all.push(...todos);
       }
     }

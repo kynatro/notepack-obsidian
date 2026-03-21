@@ -1,4 +1,4 @@
-import { App, TFile, TFolder } from "obsidian";
+import { App, TFile, TFolder, normalizePath } from "obsidian";
 import { TeamMember, NotePackSettings } from "./types";
 
 /**
@@ -32,7 +32,7 @@ export function getTeamMembers(app: App, settings: NotePackSettings): TeamMember
     if (child.path.toLowerCase().includes("archive")) continue;
 
     const name = child.name;
-    const readmePath = `${child.path}/README.md`;
+    const readmePath = normalizePath(`${child.path}/README.md`);
     const readmeFile = app.vault.getAbstractFileByPath(readmePath);
     let aliases: string[] = [];
     let isNonReporting = false;

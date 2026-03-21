@@ -1,4 +1,4 @@
-import { App, TFile, TFolder, Notice } from "obsidian";
+import { App, TFile, TFolder, Notice, normalizePath } from "obsidian";
 import { Todo, NotePackSettings } from "./types";
 import { TodoIndex } from "./todoIndex";
 import { getTeamMembers } from "./team";
@@ -57,7 +57,7 @@ export class TodoExporter {
     if (assignedTo.toLowerCase() === "me") {
       readmePath = "README.md";
     } else {
-      readmePath = `${this.settings.teamFolder}/${assignedTo}/README.md`;
+      readmePath = normalizePath(`${this.settings.teamFolder}/${assignedTo}/README.md`);
     }
 
     const todos =
@@ -83,9 +83,9 @@ export class TodoExporter {
     for (const child of folder.children) {
       if (!(child instanceof TFolder)) continue;
       if (child.path.toLowerCase().includes("archive")) continue;
-      if (child.path.startsWith(this.settings.teamFolder + "/")) continue;
+      if (child.path.startsWith(normalizePath(this.settings.teamFolder) + "/")) continue;
 
-      const readmePath = `${child.path}/README.md`;
+      const readmePath = normalizePath(`${child.path}/README.md`);
       const readmeFile = this.app.vault.getAbstractFileByPath(readmePath);
 
       if (readmeFile instanceof TFile) {
