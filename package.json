@@ -1,6 +1,6 @@
 {
   "name": "notepack-obsidian",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "NotePack plugin for Obsidian - Todo collation with team management",
   "main": "main.js",
   "scripts": {
