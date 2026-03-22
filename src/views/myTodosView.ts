@@ -26,16 +26,18 @@ export class MyTodosView extends ItemView {
     return "check-square";
   }
 
-  async onOpen(): Promise<void> {
+  onOpen(): Promise<void> {
     this.unsubscribe = this.todoIndex.onChange(() => this.render());
     this.render();
+    return Promise.resolve();
   }
 
-  async onClose(): Promise<void> {
+  onClose(): Promise<void> {
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
     }
+    return Promise.resolve();
   }
 
   private render(): void {

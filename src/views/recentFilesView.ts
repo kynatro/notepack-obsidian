@@ -29,7 +29,7 @@ export class RecentFilesView extends ItemView {
     this.render();
   }
 
-  async onOpen(): Promise<void> {
+  onOpen(): Promise<void> {
     this.render();
 
     // Re-render periodically since mtime changes don't trigger a specific event
@@ -42,13 +42,15 @@ export class RecentFilesView extends ItemView {
         setTimeout(() => this.render(), 1000);
       })
     );
+    return Promise.resolve();
   }
 
-  async onClose(): Promise<void> {
+  onClose(): Promise<void> {
     if (this.refreshTimer) {
       clearInterval(this.refreshTimer);
       this.refreshTimer = null;
     }
+    return Promise.resolve();
   }
 
   private render(): void {
