@@ -209,7 +209,7 @@ export class TeamTodosView extends ItemView {
 
     const checkbox = li.createEl("input", { type: "checkbox" });
     checkbox.addClass("notepack-checkbox");
-    checkbox.addEventListener("change", () => this.checkOffTodo(todo));
+    checkbox.addEventListener("change", () => { this.checkOffTodo(todo).catch(console.error); });
 
     const assignee = li.createSpan({
       text: todo.assignedToAlias,
