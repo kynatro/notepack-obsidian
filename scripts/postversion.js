@@ -13,16 +13,11 @@ function confirm(question) {
   });
 }
 
-function cleanupTag() {
-  execSync(`git tag -d v${RELEASE_VERSION}`);
-  console.log(`Deleted local tag v${RELEASE_VERSION}`);
-}
-
 function rollback() {
-  cleanupTag();
-
   execSync(`git reset --hard origin/dev`);
   console.log(`Reset dev to origin/dev`);
+  execSync(`git tag -d v${RELEASE_VERSION}`);
+  console.log(`Deleted local tag v${RELEASE_VERSION}`);
 }
 
 async function run() {
@@ -39,10 +34,9 @@ async function run() {
   execSync(`git reset --hard origin/main`);
   execSync(`git merge dev`);
   execSync(`git push -u origin dev main`);
+  execSync(`git push --tags origin`);
   console.log(`Pushed branches dev, main`);
   execSync(`git checkout dev`);
-
-  cleanupTag();
 }
 
 run();
