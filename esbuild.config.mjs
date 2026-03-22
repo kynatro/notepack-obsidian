@@ -39,9 +39,6 @@ const context = await esbuild.context({
   outfile: "main.js",
 });
 
-copyFileSync("src/manifest.json", "manifest.json");
-copyFileSync("src/styles.css", "styles.css");
-
 if (prod) {
   await context.rebuild();
   process.exit(0);
