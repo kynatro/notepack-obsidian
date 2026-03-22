@@ -253,7 +253,7 @@ export class TodoExporter {
 
     const ups = fromParts.length - common;
     const relative = [
-      ...Array(ups).fill(".."),
+      ...Array<string>(ups).fill(".."),
       ...toParts.slice(common),
     ].join("/");
 

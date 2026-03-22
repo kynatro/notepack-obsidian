@@ -1,5 +1,7 @@
-import { ItemView, WorkspaceLeaf, TFile, moment } from "obsidian";
+import { ItemView, WorkspaceLeaf, TFile } from "obsidian";
 import { VIEW_TYPE_RECENT_FILES, NotePackSettings } from "../types";
+
+const DISPLAY_TEXT = "Recent files";
 
 export class RecentFilesView extends ItemView {
   private settings: NotePackSettings;
@@ -15,7 +17,7 @@ export class RecentFilesView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "Recent Files";
+    return DISPLAY_TEXT;
   }
 
   getIcon(): string {
@@ -27,7 +29,7 @@ export class RecentFilesView extends ItemView {
     this.render();
   }
 
-  async onOpen(): Promise<void> {
+  onOpen(): Promise<void> {
     this.render();
 
     // Re-render periodically since mtime changes don't trigger a specific event
@@ -40,13 +42,15 @@ export class RecentFilesView extends ItemView {
         setTimeout(() => this.render(), 1000);
       })
     );
+    return Promise.resolve();
   }
 
-  async onClose(): Promise<void> {
+  onClose(): Promise<void> {
     if (this.refreshTimer) {
       clearInterval(this.refreshTimer);
       this.refreshTimer = null;
     }
+    return Promise.resolve();
   }
 
   private render(): void {
@@ -55,7 +59,7 @@ export class RecentFilesView extends ItemView {
     container.addClass("notepack-view");
 
     const header = container.createDiv({ cls: "notepack-view-header" });
-    header.createEl("h4", { text: "Recent Files" });
+    header.createEl("h4", { text: DISPLAY_TEXT });
 
     const files = this.getRecentFiles();
 
@@ -77,7 +81,7 @@ export class RecentFilesView extends ItemView {
       });
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        this.app.workspace.getLeaf(false).openFile(file);
+        void this.app.workspace.getLeaf(false).openFile(file).catch(console.error);
       });
 
       const nameEl = link.createDiv({ cls: "notepack-recent-name" });

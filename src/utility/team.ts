@@ -41,7 +41,7 @@ export function getTeamMembers(app: App, settings: NotePackSettings): TeamMember
       const cache = app.metadataCache.getFileCache(readmeFile);
       if (cache?.frontmatter) {
         if (Array.isArray(cache.frontmatter.aliases)) {
-          aliases = cache.frontmatter.aliases;
+          aliases = cache.frontmatter.aliases as string[];
         }
         if (cache.frontmatter.isNonReporting) {
           isNonReporting = true;

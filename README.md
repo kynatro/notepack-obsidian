@@ -58,10 +58,10 @@ Relative expressions (`tomorrow`, `EOW`, `by Friday`, etc.) are resolved against
 
 #### Urgency sections
 
-The My Todos and Team Todos views sort due todos to the top:
+The My todos and Team todos views sort due todos to the top:
 
 - **Overdue** (red) — due date has passed, or EOD time has passed today
-- **Due Soon** (orange) — due today or within the next 7 days
+- **Due soon** (orange) — due today or within the next 7 days
 - Todos with no due date, or a due date beyond 7 days, appear in the regular grouped section below with a color-coded badge indicating the date
 
 ### Team Management
@@ -98,12 +98,12 @@ Open the command palette (`Ctrl/Cmd + P`) and search for "NotePack":
 | **Show team todos** | Opens a sidebar view showing all team-assigned todos with member filtering |
 | **Show team member todos** | Fuzzy-search a team member, then show their todos |
 | **Show recent files** | Opens a sidebar view of recently modified files |
-| **Export todos & recent files to README.md** | Writes todo snapshots into README.md files and recent files into the root README.md |
+| **Export todos and recent files to file system** | Writes todo snapshots into README.md files and recent files into the root README.md |
 | **Rebuild todo index** | Force a full re-index of all files |
 
 ### Sidebar Views
 
-The three sidebar views (My Todos, Team Todos, Recent Files) are live — they update automatically as you edit files. You can:
+The three sidebar views (My todos, Team todos, Recent files) are live — they update automatically as you edit files. You can:
 
 - Click a group heading to navigate to the source file
 - Check off a todo directly from the sidebar (it updates the source file)
@@ -122,16 +122,14 @@ The export command writes a point-in-time snapshot of todos into README.md files
 
 Configure via **Settings → NotePack**:
 
-- **Base folders**: Comma-separated folder paths to scan (empty = entire vault)
-- **Team folder**: Path to the team member folder hierarchy
-- **Todo section title**: Heading text used in README.md exports (default: "Open Todos")
-- **Recent files section title**: Heading text for recent files (default: "Recent Files")
-- **Anchor heading level**: H-level for sections in README.md (default: `##`)
-- **Todo group heading level**: H-level for grouped todos within sections (default: `####`)
-- **Recent files count**: How many recent files to display
-- **End of day**: The time at which `EOD` due dates are considered overdue (default: 5:00 PM)
-- **End of week**: The last day of the work week for `EOW` due dates (default: Saturday)
-- **Debounce delay**: Milliseconds to wait after a change before re-indexing
+- **Team folder**: Path to the folder containing team member subfolders
+- **Todo section title**: Heading text for the todo section (default: "Open todos")
+- **Recent files section title**: Heading text for the recent files section (default: "Recent files")
+- **Anchor heading level**: Markdown heading level for todo and recent file sections (default: `##`)
+- **Todo group heading level**: Heading level for individual todo groups within the section (default: `####`)
+- **Recent files count**: Number of recently modified files to show
+- **End of day**: The time at which end of day due dates are considered overdue (default: 5:00 PM)
+- **End of week**: The last day of the work week for end of week due dates (default: Saturday)
 
 ## File Conventions
 

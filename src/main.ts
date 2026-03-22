@@ -60,14 +60,16 @@ export default class NotePackPlugin extends Plugin {
       id: "show-team-member-todos",
       name: "Show team member todos",
       callback: () => {
-        new TeamMemberModal(this.app, this.settings, async (member) => {
-          await this.activateView(VIEW_TYPE_TEAM_TODOS);
-          // Find the view and set the selected member
-          const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_TEAM_TODOS);
-          for (const leaf of leaves) {
-            const view = leaf.view as TeamTodosView;
-            view.setSelectedMember(member.name);
-          }
+        new TeamMemberModal(this.app, this.settings, (member) => {
+          (async () => {
+            await this.activateView(VIEW_TYPE_TEAM_TODOS);
+            // Find the view and set the selected member
+            const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_TEAM_TODOS);
+            for (const leaf of leaves) {
+              const view = leaf.view as TeamTodosView;
+              view.setSelectedMember(member.name);
+            }
+          })().catch(console.error);
         }).open();
       },
     });
@@ -80,7 +82,7 @@ export default class NotePackPlugin extends Plugin {
 
     this.addCommand({
       id: "export-to-readme",
-      name: "Export todos & recent files to README.md",
+      name: "Export todos and recent files to file system",
       callback: () => this.exporter.exportAll(),
     });
 
@@ -100,8 +102,9 @@ export default class NotePackPlugin extends Plugin {
     // ---------------------------------------------------------------
     // Ribbon icon
     // ---------------------------------------------------------------
-    this.addRibbonIcon("check-square", "NotePack: My Todos", () => {
-      this.activateView(VIEW_TYPE_MY_TODOS);
+    // eslint-disable-next-line obsidianmd/ui/sentence-case
+    this.addRibbonIcon("check-square", "NotePack: My todos", () => {
+      void this.activateView(VIEW_TYPE_MY_TODOS).catch(console.error);
     });
 
     // ---------------------------------------------------------------
@@ -129,7 +132,7 @@ export default class NotePackPlugin extends Plugin {
     // Incremental updates on file change
     this.registerEvent(
       this.app.metadataCache.on("changed", (file, data, cache) => {
-        this.todoIndex.updateFile(file, data, cache);
+        void this.todoIndex.updateFile(file, data, cache).catch(console.error);
       })
     );
 
@@ -148,10 +151,12 @@ export default class NotePackPlugin extends Plugin {
         this.todoIndex.removeFile(oldPath);
         if (file instanceof TFile && file.extension === "md") {
           // Wait a tick for the metadata cache to process the rename
-          setTimeout(async () => {
-            const cache = this.app.metadataCache.getFileCache(file);
-            const content = await this.app.vault.cachedRead(file);
-            this.todoIndex.updateFile(file, content, cache ?? undefined);
+          setTimeout(() => {
+            (async () => {
+              const cache = this.app.metadataCache.getFileCache(file);
+              const content = await this.app.vault.cachedRead(file);
+              await this.todoIndex.updateFile(file, content, cache ?? undefined);
+            })().catch(console.error);
           }, 200);
         }
       })
@@ -164,7 +169,7 @@ export default class NotePackPlugin extends Plugin {
           // Wait a tick for the metadata cache to process
           setTimeout(() => {
             const cache = this.app.metadataCache.getFileCache(file);
-            this.todoIndex.updateFile(file, undefined, cache ?? undefined);
+            void this.todoIndex.updateFile(file, undefined, cache ?? undefined).catch(console.error);
           }, 200);
         }
       })
@@ -176,7 +181,7 @@ export default class NotePackPlugin extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<NotePackSettings>);
   }
 
   async saveSettings(): Promise<void> {
@@ -217,7 +222,7 @@ export default class NotePackPlugin extends Plugin {
     }
 
     if (leaf) {
-      workspace.revealLeaf(leaf);
+      await workspace.revealLeaf(leaf).catch(console.error);
     }
   }
 }

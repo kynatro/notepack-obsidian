@@ -5,3 +5,4 @@ main.js
 *.zip
 coverage
 notepack-obsidian
+data.json

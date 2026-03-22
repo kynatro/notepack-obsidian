@@ -62,7 +62,7 @@ export class TodoIndex {
   refreshAliases(): void {
     this.aliasMap = getTeamMemberAliases(this.app, this.settings);
 
-    for (const [path, todos] of this.index) {
+    for (const [, todos] of this.index) {
       for (const todo of todos) {
         todo.assignedToAlias = this.resolveAlias(todo.assignedTo);
       }

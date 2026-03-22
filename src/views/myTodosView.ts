@@ -3,6 +3,8 @@ import { VIEW_TYPE_MY_TODOS, Todo } from "../types";
 import { TodoIndex } from "../lib/todoIndex";
 import { getDueDateStatus, formatDueDate } from "../utility/dueDateParser";
 
+const DISPLAY_TEXT = "My todos";
+
 export class MyTodosView extends ItemView {
   private todoIndex: TodoIndex;
   private unsubscribe: (() => void) | null = null;
@@ -17,23 +19,25 @@ export class MyTodosView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "My Todos";
+    return DISPLAY_TEXT;
   }
 
   getIcon(): string {
     return "check-square";
   }
 
-  async onOpen(): Promise<void> {
+  onOpen(): Promise<void> {
     this.unsubscribe = this.todoIndex.onChange(() => this.render());
     this.render();
+    return Promise.resolve();
   }
 
-  async onClose(): Promise<void> {
+  onClose(): Promise<void> {
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
     }
+    return Promise.resolve();
   }
 
   private render(): void {
@@ -43,7 +47,7 @@ export class MyTodosView extends ItemView {
     container.addClass("notepack-view");
 
     const header = container.createDiv({ cls: "notepack-view-header" });
-    header.createEl("h4", { text: "My Todos" });
+    header.createEl("h4", { text: DISPLAY_TEXT });
 
     const todos = this.todoIndex.getMyTodos();
 
@@ -74,7 +78,7 @@ export class MyTodosView extends ItemView {
       this.renderUrgentSection(container, "Overdue", overdue, "notepack-section-overdue");
     }
     if (dueSoon.length > 0) {
-      this.renderUrgentSection(container, "Due Soon", dueSoon, "notepack-section-due-soon");
+      this.renderUrgentSection(container, "Due soon", dueSoon, "notepack-section-due-soon");
     }
     if (regular.length > 0) {
       this.renderGroupedTodos(container, regular);
@@ -109,12 +113,12 @@ export class MyTodosView extends ItemView {
       });
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        this.app.workspace.getLeaf(false).openFile(groupTodos[0].file);
+        void this.app.workspace.getLeaf(false).openFile(groupTodos[0].file).catch(console.error);
       });
 
       const list = groupEl.createEl("ul", { cls: "notepack-todo-list" });
       for (const todo of groupTodos) {
-        this.renderTodoItem(list, todo);
+        void this.renderTodoItem(list, todo).catch(console.error);
       }
     }
   }
@@ -136,27 +140,27 @@ export class MyTodosView extends ItemView {
       link.addEventListener("click", (e) => {
         e.preventDefault();
         const file = groupTodos[0].file;
-        this.app.workspace.getLeaf(false).openFile(file);
+        void this.app.workspace.getLeaf(false).openFile(file).catch(console.error);
       });
 
       const list = groupEl.createEl("ul", { cls: "notepack-todo-list" });
       for (const todo of groupTodos) {
-        this.renderTodoItem(list, todo);
+        void this.renderTodoItem(list, todo).catch(console.error);
       }
     }
   }
 
-  private renderTodoItem(list: HTMLElement, todo: Todo): void {
+  private async renderTodoItem(list: HTMLElement, todo: Todo): Promise<void> {
     const li = list.createEl("li", { cls: "notepack-todo-item" });
 
     const checkbox = li.createEl("input", { type: "checkbox" });
     checkbox.addClass("notepack-checkbox");
     checkbox.addEventListener("change", () => {
-      this.checkOffTodo(todo);
+      void this.checkOffTodo(todo).catch(console.error);
     });
 
     const text = li.createSpan({ cls: "notepack-todo-text" });
-    MarkdownRenderer.renderMarkdown(todo.text, text, todo.file.path, this);
+    await MarkdownRenderer.render(this.app, todo.text, text, todo.file.path, this).catch(console.error);
 
     if (todo.dueDate) {
       const status = getDueDateStatus(todo.dueDate);

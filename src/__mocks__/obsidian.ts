@@ -45,7 +45,3 @@ export const MarkdownRenderer = { renderMarkdown: jest.fn() };
 export function normalizePath(path: string): string {
   return path.replace(/\\/g, "/").replace(/\/+/g, "/").replace(/\/$/, "");
 }
-
-export const moment = (ts: number) => ({
-  format: () => new Date(ts).toLocaleDateString(),
-});

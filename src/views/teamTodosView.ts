@@ -4,6 +4,8 @@ import { TodoIndex } from "../lib/todoIndex";
 import { getTeamMembers } from "../utility/team";
 import { getDueDateStatus, formatDueDate } from "../utility/dueDateParser";
 
+const DISPLAY_TEXT = "Team todos";
+
 export class TeamTodosView extends ItemView {
   private todoIndex: TodoIndex;
   private settings: NotePackSettings;
@@ -25,7 +27,7 @@ export class TeamTodosView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "Team Todos";
+    return DISPLAY_TEXT;
   }
 
   getIcon(): string {
@@ -41,16 +43,18 @@ export class TeamTodosView extends ItemView {
     this.render();
   }
 
-  async onOpen(): Promise<void> {
+  onOpen(): Promise<void> {
     this.unsubscribe = this.todoIndex.onChange(() => this.render());
     this.render();
+    return Promise.resolve();
   }
 
-  async onClose(): Promise<void> {
+  onClose(): Promise<void> {
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
     }
+    return Promise.resolve();
   }
 
   private render(): void {
@@ -59,7 +63,7 @@ export class TeamTodosView extends ItemView {
     container.addClass("notepack-view");
 
     const header = container.createDiv({ cls: "notepack-view-header" });
-    header.createEl("h4", { text: "Team Todos" });
+    header.createEl("h4", { text: DISPLAY_TEXT });
 
     // Team member selector
     const members = getTeamMembers(this.app, this.settings);
@@ -133,7 +137,7 @@ export class TeamTodosView extends ItemView {
       this.renderUrgentSection(container, "Overdue", overdue, "notepack-section-overdue");
     }
     if (dueSoon.length > 0) {
-      this.renderUrgentSection(container, "Due Soon", dueSoon, "notepack-section-due-soon");
+      this.renderUrgentSection(container, "Due soon", dueSoon, "notepack-section-due-soon");
     }
     if (regular.length > 0) {
       this.renderGroupedTodos(container, regular);
@@ -168,12 +172,12 @@ export class TeamTodosView extends ItemView {
       });
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        this.app.workspace.getLeaf(false).openFile(groupTodos[0].file);
+        void this.app.workspace.getLeaf(false).openFile(groupTodos[0].file).catch(console.error);
       });
 
       const list = groupEl.createEl("ul", { cls: "notepack-todo-list" });
       for (const todo of groupTodos) {
-        this.renderTodoItem(list, todo);
+        void this.renderTodoItem(list, todo).catch(console.error);
       }
     }
   }
@@ -194,22 +198,22 @@ export class TeamTodosView extends ItemView {
       });
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        this.app.workspace.getLeaf(false).openFile(groupTodos[0].file);
+        void this.app.workspace.getLeaf(false).openFile(groupTodos[0].file).catch(console.error);
       });
 
       const list = groupEl.createEl("ul", { cls: "notepack-todo-list" });
       for (const todo of groupTodos) {
-        this.renderTodoItem(list, todo);
+        void this.renderTodoItem(list, todo).catch(console.error);
       }
     }
   }
 
-  private renderTodoItem(list: HTMLElement, todo: Todo): void {
+  private async renderTodoItem(list: HTMLElement, todo: Todo): Promise<void> {
     const li = list.createEl("li", { cls: "notepack-todo-item" });
 
     const checkbox = li.createEl("input", { type: "checkbox" });
     checkbox.addClass("notepack-checkbox");
-    checkbox.addEventListener("change", () => this.checkOffTodo(todo));
+    checkbox.addEventListener("change", () => { void this.checkOffTodo(todo).catch(console.error); });
 
     const assignee = li.createSpan({
       text: todo.assignedToAlias,
@@ -221,7 +225,7 @@ export class TeamTodosView extends ItemView {
     const text = li.createSpan({ cls: "notepack-todo-text" });
     // Strip the @mention prefix since we show the assignee separately
     const cleanText = todo.text.replace(/^@[A-Za-z.]+\s*/, "");
-    MarkdownRenderer.renderMarkdown(cleanText, text, todo.file.path, this);
+    await MarkdownRenderer.render(this.app, cleanText, text, todo.file.path, this).catch(console.error);
 
     if (todo.dueDate) {
       const status = getDueDateStatus(todo.dueDate);
