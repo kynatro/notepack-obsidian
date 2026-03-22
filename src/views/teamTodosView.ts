@@ -204,7 +204,7 @@ export class TeamTodosView extends ItemView {
     }
   }
 
-  private renderTodoItem(list: HTMLElement, todo: Todo): void {
+  private async renderTodoItem(list: HTMLElement, todo: Todo): Promise<void> {
     const li = list.createEl("li", { cls: "notepack-todo-item" });
 
     const checkbox = li.createEl("input", { type: "checkbox" });
@@ -221,7 +221,7 @@ export class TeamTodosView extends ItemView {
     const text = li.createSpan({ cls: "notepack-todo-text" });
     // Strip the @mention prefix since we show the assignee separately
     const cleanText = todo.text.replace(/^@[A-Za-z.]+\s*/, "");
-    MarkdownRenderer.renderMarkdown(cleanText, text, todo.file.path, this);
+    await MarkdownRenderer.render(this.app, cleanText, text, todo.file.path, this).catch(console.error);
 
     if (todo.dueDate) {
       const status = getDueDateStatus(todo.dueDate);

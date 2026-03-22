@@ -146,7 +146,7 @@ export class MyTodosView extends ItemView {
     }
   }
 
-  private renderTodoItem(list: HTMLElement, todo: Todo): void {
+  private async renderTodoItem(list: HTMLElement, todo: Todo): Promise<void> {
     const li = list.createEl("li", { cls: "notepack-todo-item" });
 
     const checkbox = li.createEl("input", { type: "checkbox" });
@@ -156,7 +156,7 @@ export class MyTodosView extends ItemView {
     });
 
     const text = li.createSpan({ cls: "notepack-todo-text" });
-    MarkdownRenderer.renderMarkdown(todo.text, text, todo.file.path, this);
+    await MarkdownRenderer.render(this.app, todo.text, text, todo.file.path, this).catch(console.error);
 
     if (todo.dueDate) {
       const status = getDueDateStatus(todo.dueDate);
