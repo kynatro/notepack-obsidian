@@ -135,7 +135,7 @@ export class TeamTodosView extends ItemView {
       this.renderUrgentSection(container, "Overdue", overdue, "notepack-section-overdue");
     }
     if (dueSoon.length > 0) {
-      this.renderUrgentSection(container, "Due Soon", dueSoon, "notepack-section-due-soon");
+      this.renderUrgentSection(container, "Due soon", dueSoon, "notepack-section-due-soon");
     }
     if (regular.length > 0) {
       this.renderGroupedTodos(container, regular);
