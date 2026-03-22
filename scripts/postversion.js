@@ -34,8 +34,9 @@ async function run() {
   execSync(`git reset --hard origin/main`);
   execSync(`git merge dev`);
   execSync(`git push -u origin dev main`);
-  execSync(`git push --tags origin`);
   console.log(`Pushed branches dev, main`);
+  execSync(`git push --tags origin`);
+  console.log(`Pushed tags`);
   execSync(`git checkout dev`);
 }
 
