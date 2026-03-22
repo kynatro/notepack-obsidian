@@ -128,6 +128,7 @@ Configure via **Settings → NotePack**:
 - **Anchor heading level**: Markdown heading level for todo and recent file sections (default: `##`)
 - **Todo group heading level**: Heading level for individual todo groups within the section (default: `####`)
 - **Recent files count**: Number of recently modified files to show
+- **Show un-dated files first**: When enabled, files without a date prefix are sorted above dated files in todo views (default: off)
 - **End of day**: The time at which end of day due dates are considered overdue (default: 5:00 PM)
 - **End of week**: The last day of the work week for end of week due dates (default: Saturday)
 
