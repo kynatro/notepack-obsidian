@@ -68,13 +68,10 @@ jobs:
         run: |
           VERSION="v${{ steps.version.outputs.version }}"
 
-          gh release edit "$VERSION" \
+          gh release create "$VERSION" \
             --title "NotePack ${VERSION}" \
             --notes-file RELEASE_NOTES.md \
-            --latest
-
-          gh release upload "$VERSION" \
-            --clobber \
+            --latest \
             "notepack-obsidian-${{ steps.version.outputs.version }}.zip" \
             "main.js" \
             "manifest.json" \
