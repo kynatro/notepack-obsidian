@@ -148,10 +148,12 @@ export default class NotePackPlugin extends Plugin {
         this.todoIndex.removeFile(oldPath);
         if (file instanceof TFile && file.extension === "md") {
           // Wait a tick for the metadata cache to process the rename
-          setTimeout(async () => {
+          setTimeout(() => {
+(async () => {
             const cache = this.app.metadataCache.getFileCache(file);
             const content = await this.app.vault.cachedRead(file);
-            this.todoIndex.updateFile(file, content, cache ?? undefined);
+await this.todoIndex.updateFile(file, content, cache ?? undefined);
+})().catch(console.error);
           }, 200);
         }
       })
