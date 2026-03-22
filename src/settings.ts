@@ -121,6 +121,7 @@ export class NotePackSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("End of day")
       .setDesc(
+        // eslint-disable-next-line obsidianmd/ui/sentence-case
         'The time at which "end of day" due dates are considered overdue; defaults to 5:00 PM.'
       )
       .addDropdown((dropdown) => {
@@ -141,6 +142,7 @@ export class NotePackSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("End of week")
       .setDesc(
+        // eslint-disable-next-line obsidianmd/ui/sentence-case
         'The last day of the work week for "end of week" due dates; defaults to Saturday.'
       )
       .addDropdown((dropdown) =>
