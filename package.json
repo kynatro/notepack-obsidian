@@ -9,7 +9,7 @@
     "test": "jest --verbose",
     "test:coverage": "jest --coverage",
     "preversion": "node scripts/preversion.js && npm test",
-    "version": "node scripts/version.js && git add src/manifest.json",
+    "version": "node scripts/version.js && git add manifest.json",
     "postversion": "node scripts/postversion.js"
   },
   "keywords": [
