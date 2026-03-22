@@ -68,14 +68,13 @@ jobs:
         run: |
           VERSION="v${{ steps.version.outputs.version }}"
 
-          # Remove existing release and tag so we can publish a fresh one
-          gh release delete "$VERSION" --yes 2>/dev/null || true
-          git push origin ":refs/tags/$VERSION" 2>/dev/null || true
-
-          gh release create "$VERSION" \
+          gh release edit "$VERSION" \
             --title "NotePack ${VERSION}" \
             --notes-file RELEASE_NOTES.md \
-            --latest \
+            --latest
+
+          gh release upload "$VERSION" \
+            --clobber \
             "notepack-obsidian-${{ steps.version.outputs.version }}.zip" \
             "main.js" \
             "manifest.json" \
