@@ -6,5 +6,6 @@
   "description": "NotePack scans your vault's markdown files for unchecked todos and collates them in a todos sidebar. Supports @mention for team members and natural language due date logic.",
   "author": "Dave Shepard",
   "authorUrl": "https://github.com/kynatro",
+  "fundingUrl": "https://github.com/sponsors/kynatro",
   "isDesktopOnly": false
 }
