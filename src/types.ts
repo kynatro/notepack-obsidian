@@ -58,6 +58,8 @@ export interface NotePackSettings {
   endOfDayHour: number;
   /** Day of week (0=Sunday … 6=Saturday) considered the last day of the work week for EOW */
   endOfWeekDay: number;
+  /** When true, un-dated files are sorted above dated files in todo views */
+  showUndatedFirst: boolean;
 }
 
 export const DEFAULT_SETTINGS: NotePackSettings = {
@@ -69,6 +71,7 @@ export const DEFAULT_SETTINGS: NotePackSettings = {
   recentFilesCount: 5,
   endOfDayHour: 17,
   endOfWeekDay: 6,
+  showUndatedFirst: false,
 };
 
 /**

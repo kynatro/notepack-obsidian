@@ -154,10 +154,11 @@ export class TodoIndex {
    * Get unique group names from a set of todos, ordered by date descending.
    */
   getGroupNames(todos: Todo[]): string[] {
+    const undatedFirst = this.settings.showUndatedFirst;
     const sorted = [...todos].sort((a, b) => {
       if (a.fileDate && b.fileDate) return b.fileDate.localeCompare(a.fileDate);
-      if (a.fileDate) return -1;
-      if (b.fileDate) return 1;
+      if (a.fileDate && !b.fileDate) return undatedFirst ? 1 : -1;
+      if (!a.fileDate && b.fileDate) return undatedFirst ? -1 : 1;
       return b.fileMtime - a.fileMtime;
     });
 
@@ -322,15 +323,16 @@ export class TodoIndex {
   }
 
   private sortTodos(todos: Todo[]): Todo[] {
+    const undatedFirst = this.settings.showUndatedFirst;
     return todos.sort((a, b) => {
       // Sort by fileDate descending (newest first), then by id ascending
       if (a.fileDate && b.fileDate) {
         const cmp = b.fileDate.localeCompare(a.fileDate);
         if (cmp !== 0) return cmp;
-      } else if (a.fileDate) {
-        return -1;
-      } else if (b.fileDate) {
-        return 1;
+      } else if (a.fileDate && !b.fileDate) {
+        return undatedFirst ? 1 : -1;
+      } else if (!a.fileDate && b.fileDate) {
+        return undatedFirst ? -1 : 1;
       }
       return a.id - b.id;
     });

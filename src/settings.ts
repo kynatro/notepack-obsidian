@@ -116,6 +116,20 @@ export class NotePackSettingTab extends PluginSettingTab {
           })
       );
 
+    new Setting(containerEl).setHeading().setName("Sorting");
+
+    new Setting(containerEl)
+      .setName("Show un-dated files first")
+      .setDesc("When enabled, files without a date prefix are sorted above dated files in todo views.")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.showUndatedFirst)
+          .onChange(async (value) => {
+            this.plugin.settings.showUndatedFirst = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
     new Setting(containerEl).setHeading().setName("Due dates");
 
     new Setting(containerEl)

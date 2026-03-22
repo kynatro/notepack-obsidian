@@ -483,6 +483,134 @@ describe("TodoIndex.getAllTodos", () => {
   });
 });
 
+// ─── showUndatedFirst setting ─────────────────────────────────────────────────
+
+describe("TodoIndex – showUndatedFirst setting", () => {
+  describe("sortTodos (via getAllTodos)", () => {
+    it("places undated files before dated files when enabled", async () => {
+      const app = buildMockApp({
+        "undated.md": "- [ ] Undated task",
+        "2026-03-05.md": "- [ ] Dated task",
+      });
+      const idx = new TodoIndex(app, { ...baseSettings, showUndatedFirst: true });
+      await idx.rebuild();
+      const todos = idx.getAllTodos();
+      expect(todos[0].text).toBe("Undated task");
+      expect(todos[1].text).toBe("Dated task");
+    });
+
+    it("places dated files before undated files when disabled (default)", async () => {
+      const app = buildMockApp({
+        "undated.md": "- [ ] Undated task",
+        "2026-03-05.md": "- [ ] Dated task",
+      });
+      const idx = new TodoIndex(app, { ...baseSettings, showUndatedFirst: false });
+      await idx.rebuild();
+      const todos = idx.getAllTodos();
+      expect(todos[0].text).toBe("Dated task");
+      expect(todos[1].text).toBe("Undated task");
+    });
+
+    it("still sorts dated files among themselves by date descending when enabled", async () => {
+      const app = buildMockApp({
+        "undated.md": "- [ ] Undated task",
+        "2026-01-01.md": "- [ ] Jan task",
+        "2026-03-05.md": "- [ ] Mar task",
+      });
+      const idx = new TodoIndex(app, { ...baseSettings, showUndatedFirst: true });
+      await idx.rebuild();
+      const todos = idx.getAllTodos();
+      expect(todos[0].text).toBe("Undated task");
+      expect(todos[1].text).toBe("Mar task");
+      expect(todos[2].text).toBe("Jan task");
+    });
+
+    it("still sorts dated files among themselves by date descending when disabled", async () => {
+      const app = buildMockApp({
+        "undated.md": "- [ ] Undated task",
+        "2026-01-01.md": "- [ ] Jan task",
+        "2026-03-05.md": "- [ ] Mar task",
+      });
+      const idx = new TodoIndex(app, { ...baseSettings, showUndatedFirst: false });
+      await idx.rebuild();
+      const todos = idx.getAllTodos();
+      expect(todos[0].text).toBe("Mar task");
+      expect(todos[1].text).toBe("Jan task");
+      expect(todos[2].text).toBe("Undated task");
+    });
+
+    it("sorts multiple undated files among themselves by id when enabled", async () => {
+      const app = buildMockApp({
+        "2026-03-05.md": "- [ ] Dated task",
+        "alpha.md": "- [ ] Alpha task",
+        "beta.md": "- [ ] Beta task",
+      });
+      const idx = new TodoIndex(app, { ...baseSettings, showUndatedFirst: true });
+      await idx.rebuild();
+      const todos = idx.getAllTodos();
+      // Both undated files appear before the dated one
+      expect(todos[0].fileDate).toBeNull();
+      expect(todos[1].fileDate).toBeNull();
+      expect(todos[2].text).toBe("Dated task");
+    });
+
+    it("responds to updateSettings toggling showUndatedFirst", async () => {
+      const app = buildMockApp({
+        "undated.md": "- [ ] Undated task",
+        "2026-03-05.md": "- [ ] Dated task",
+      });
+      const idx = new TodoIndex(app, { ...baseSettings, showUndatedFirst: false });
+      await idx.rebuild();
+
+      expect(idx.getAllTodos()[0].text).toBe("Dated task");
+
+      idx.updateSettings({ ...baseSettings, showUndatedFirst: true });
+
+      expect(idx.getAllTodos()[0].text).toBe("Undated task");
+    });
+  });
+
+  describe("getGroupNames", () => {
+    it("places undated groups before dated groups when enabled", async () => {
+      const app = buildMockApp({
+        "undated.md": "- [ ] Undated task",
+        "2026-03-05.md": "- [ ] Dated task",
+      });
+      const idx = new TodoIndex(app, { ...baseSettings, showUndatedFirst: true });
+      await idx.rebuild();
+      const groups = idx.getGroupNames(idx.getAllTodos());
+      expect(groups[0]).toContain("undated");
+      expect(groups[1]).toContain("2026-03-05");
+    });
+
+    it("places dated groups before undated groups when disabled", async () => {
+      const app = buildMockApp({
+        "undated.md": "- [ ] Undated task",
+        "2026-03-05.md": "- [ ] Dated task",
+      });
+      const idx = new TodoIndex(app, { ...baseSettings, showUndatedFirst: false });
+      await idx.rebuild();
+      const groups = idx.getGroupNames(idx.getAllTodos());
+      expect(groups[0]).toContain("2026-03-05");
+      expect(groups[1]).toContain("undated");
+    });
+
+    it("still orders dated groups by date descending when enabled", async () => {
+      const app = buildMockApp({
+        "undated.md": "- [ ] Undated task",
+        "2026-01-01.md": "- [ ] Jan task",
+        "2026-03-05.md": "- [ ] Mar task",
+      });
+      const idx = new TodoIndex(app, { ...baseSettings, showUndatedFirst: true });
+      await idx.rebuild();
+      const groups = idx.getGroupNames(idx.getAllTodos());
+      expect(groups[0]).toContain("undated");
+      expect(groups[1]).toContain("2026-03-05");
+      expect(groups[2]).toContain("2026-01-01");
+    });
+  });
+});
+
 // ─── getTodosFor ─────────────────────────────────────────────────────────────
 
 describe("TodoIndex.getTodosFor", () => {
