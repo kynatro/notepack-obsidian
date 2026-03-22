@@ -60,7 +60,8 @@ export default class NotePackPlugin extends Plugin {
       id: "show-team-member-todos",
       name: "Show team member todos",
       callback: () => {
-        new TeamMemberModal(this.app, this.settings, async (member) => {
+        new TeamMemberModal(this.app, this.settings, (member) => {
+          (async () => {
           await this.activateView(VIEW_TYPE_TEAM_TODOS);
           // Find the view and set the selected member
           const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_TEAM_TODOS);
@@ -68,6 +69,7 @@ export default class NotePackPlugin extends Plugin {
             const view = leaf.view as TeamTodosView;
             view.setSelectedMember(member.name);
           }
+          })().catch(console.error);
         }).open();
       },
     });
