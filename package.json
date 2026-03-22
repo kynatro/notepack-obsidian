@@ -25,7 +25,7 @@
     "url": "git+https://github.com/kynatro/notepack-obsidian.git"
   },
   "engines": {
-    "node": "20"
+    "node": "24"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
