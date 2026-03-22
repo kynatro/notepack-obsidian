@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "test": "jest --verbose",
+    "test": "npx eslint && jest --verbose",
     "test:coverage": "jest --coverage",
     "preversion": "node scripts/preversion.js && npm test",
     "version": "node scripts/version.js && git add manifest.json",
