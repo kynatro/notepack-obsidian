@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, TFile, moment } from "obsidian";
+import { ItemView, WorkspaceLeaf, TFile } from "obsidian";
 import { VIEW_TYPE_RECENT_FILES, NotePackSettings } from "../types";
 
 export class RecentFilesView extends ItemView {
