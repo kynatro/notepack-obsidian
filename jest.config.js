@@ -23,7 +23,8 @@ module.exports = {
     "!src/__mocks__/**",
     "!src/main.ts",
     "!src/settings.ts",
-    "!src/*View.ts",
+    "!src/views/*View.ts",
+    "!src/modals/*Modal.ts",
   ],
   coverageThreshold: {
     global: {
