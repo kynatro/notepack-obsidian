@@ -1,5 +1,4 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import { NotePackSettings } from "./types";
 import NotePackPlugin from "./main";
 
 export class NotePackSettingTab extends PluginSettingTab {
@@ -127,7 +126,7 @@ export class NotePackSettingTab extends PluginSettingTab {
       .addDropdown((dropdown) => {
         const options: Record<string, string> = {};
         for (let h = 0; h < 24; h++) {
-                    const display = h === 0 ? "12:00 AM" : h < 12 ? `${h}:00 AM` : h === 12 ? "12:00 PM" : `${h - 12}:00 PM`;
+          const display = h === 0 ? "12:00 AM" : h < 12 ? `${h}:00 AM` : h === 12 ? "12:00 PM" : `${h - 12}:00 PM`;
           options[String(h)] = display;
         }
         dropdown
