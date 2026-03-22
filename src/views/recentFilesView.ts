@@ -77,7 +77,7 @@ export class RecentFilesView extends ItemView {
       });
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        this.app.workspace.getLeaf(false).openFile(file);
+        void this.app.workspace.getLeaf(false).openFile(file).catch(console.error);
       });
 
       const nameEl = link.createDiv({ cls: "notepack-recent-name" });

@@ -103,7 +103,7 @@ export default class NotePackPlugin extends Plugin {
     // Ribbon icon
     // ---------------------------------------------------------------
     this.addRibbonIcon("check-square", "NotePack: My Todos", () => {
-      this.activateView(VIEW_TYPE_MY_TODOS);
+      void this.activateView(VIEW_TYPE_MY_TODOS).catch(console.error);
     });
 
     // ---------------------------------------------------------------
@@ -131,7 +131,7 @@ export default class NotePackPlugin extends Plugin {
     // Incremental updates on file change
     this.registerEvent(
       this.app.metadataCache.on("changed", (file, data, cache) => {
-        this.todoIndex.updateFile(file, data, cache);
+        void this.todoIndex.updateFile(file, data, cache).catch(console.error);
       })
     );
 
@@ -168,7 +168,7 @@ export default class NotePackPlugin extends Plugin {
           // Wait a tick for the metadata cache to process
           setTimeout(() => {
             const cache = this.app.metadataCache.getFileCache(file);
-            this.todoIndex.updateFile(file, undefined, cache ?? undefined);
+            void this.todoIndex.updateFile(file, undefined, cache ?? undefined).catch(console.error);
           }, 200);
         }
       })
@@ -221,7 +221,7 @@ export default class NotePackPlugin extends Plugin {
     }
 
     if (leaf) {
-      workspace.revealLeaf(leaf);
+      await workspace.revealLeaf(leaf).catch(console.error);
     }
   }
 }

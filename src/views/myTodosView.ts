@@ -109,12 +109,12 @@ export class MyTodosView extends ItemView {
       });
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        this.app.workspace.getLeaf(false).openFile(groupTodos[0].file);
+        void this.app.workspace.getLeaf(false).openFile(groupTodos[0].file).catch(console.error);
       });
 
       const list = groupEl.createEl("ul", { cls: "notepack-todo-list" });
       for (const todo of groupTodos) {
-        this.renderTodoItem(list, todo);
+        void this.renderTodoItem(list, todo).catch(console.error);
       }
     }
   }
@@ -136,12 +136,12 @@ export class MyTodosView extends ItemView {
       link.addEventListener("click", (e) => {
         e.preventDefault();
         const file = groupTodos[0].file;
-        this.app.workspace.getLeaf(false).openFile(file);
+        void this.app.workspace.getLeaf(false).openFile(file).catch(console.error);
       });
 
       const list = groupEl.createEl("ul", { cls: "notepack-todo-list" });
       for (const todo of groupTodos) {
-        this.renderTodoItem(list, todo);
+        void this.renderTodoItem(list, todo).catch(console.error);
       }
     }
   }
@@ -152,7 +152,7 @@ export class MyTodosView extends ItemView {
     const checkbox = li.createEl("input", { type: "checkbox" });
     checkbox.addClass("notepack-checkbox");
     checkbox.addEventListener("change", () => {
-      this.checkOffTodo(todo);
+      void this.checkOffTodo(todo).catch(console.error);
     });
 
     const text = li.createSpan({ cls: "notepack-todo-text" });
