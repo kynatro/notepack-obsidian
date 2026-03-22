@@ -1,6 +1,8 @@
 import { ItemView, WorkspaceLeaf, TFile } from "obsidian";
 import { VIEW_TYPE_RECENT_FILES, NotePackSettings } from "../types";
 
+const DISPLAY_TEXT = "Recent files";
+
 export class RecentFilesView extends ItemView {
   private settings: NotePackSettings;
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
@@ -15,7 +17,7 @@ export class RecentFilesView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "Recent Files";
+    return DISPLAY_TEXT;
   }
 
   getIcon(): string {
@@ -55,7 +57,7 @@ export class RecentFilesView extends ItemView {
     container.addClass("notepack-view");
 
     const header = container.createDiv({ cls: "notepack-view-header" });
-    header.createEl("h4", { text: "Recent Files" });
+    header.createEl("h4", { text: DISPLAY_TEXT });
 
     const files = this.getRecentFiles();
 

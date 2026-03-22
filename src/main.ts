@@ -82,7 +82,7 @@ export default class NotePackPlugin extends Plugin {
 
     this.addCommand({
       id: "export-to-readme",
-      name: "Export todos & recent files to README.md",
+      name: "Export todos and recent files to file system",
       callback: () => this.exporter.exportAll(),
     });
 
@@ -102,7 +102,7 @@ export default class NotePackPlugin extends Plugin {
     // ---------------------------------------------------------------
     // Ribbon icon
     // ---------------------------------------------------------------
-    this.addRibbonIcon("check-square", "NotePack: My Todos", () => {
+    this.addRibbonIcon("check-square", "NotePack: My todos", () => {
       void this.activateView(VIEW_TYPE_MY_TODOS).catch(console.error);
     });
 

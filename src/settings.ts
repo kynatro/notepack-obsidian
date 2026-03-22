@@ -16,7 +16,7 @@ export class NotePackSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Team folder")
       .setDesc(
-        "Path to the folder containing team member subfolders, each with a README.md."
+        "Path to the folder containing team member subfolders."
       )
       .addText((text) =>
         text
@@ -32,15 +32,15 @@ export class NotePackSettingTab extends PluginSettingTab {
       .setHeading()
       .setName("Export")
       .setDesc(
-        'These settings control the "NotePack: Export" command which writes todos and recent files into README.md files.'
+        'These settings control file exporting to write todos and recent files to the file system.'
       );
 
     new Setting(containerEl)
       .setName("Todo section title")
-      .setDesc("Heading text for the todo section in exported README.md files.")
+      .setDesc("Heading text for the todo section.")
       .addText((text) =>
         text
-          .setPlaceholder("Open Todos")
+          .setPlaceholder("Open todos")
           .setValue(this.plugin.settings.todoAnchorTitle)
           .onChange(async (value) => {
             this.plugin.settings.todoAnchorTitle = value.trim();
@@ -51,11 +51,11 @@ export class NotePackSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Recent files section title")
       .setDesc(
-        "Heading text for the recent files section in the root README.md."
+        "Heading text for the recent files section."
       )
       .addText((text) =>
         text
-          .setPlaceholder("Recent Files")
+          .setPlaceholder("Recent files")
           .setValue(this.plugin.settings.recentFilesAnchorTitle)
           .onChange(async (value) => {
             this.plugin.settings.recentFilesAnchorTitle = value.trim();
@@ -85,7 +85,7 @@ export class NotePackSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Todo group heading level")
       .setDesc(
-        "Heading level for individual todo groups within the section. Should be deeper than the anchor level."
+        "Heading level for individual todo groups within the section; should be deeper than the anchor level."
       )
       .addDropdown((dropdown) =>
         dropdown
@@ -121,7 +121,7 @@ export class NotePackSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("End of day")
       .setDesc(
-        'The time at which "end of day" (EOD) due dates are considered overdue. Defaults to 5:00 PM.'
+        'The time at which "end of day" due dates are considered overdue; defaults to 5:00 PM.'
       )
       .addDropdown((dropdown) => {
         const options: Record<string, string> = {};
@@ -141,7 +141,7 @@ export class NotePackSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("End of week")
       .setDesc(
-        'The last day of the work week for "end of week" (EOW) due dates. Defaults to Saturday.'
+        'The last day of the work week for "end of week" due dates; defaults to Saturday.'
       )
       .addDropdown((dropdown) =>
         dropdown

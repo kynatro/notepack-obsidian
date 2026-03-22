@@ -3,6 +3,8 @@ import { VIEW_TYPE_MY_TODOS, Todo } from "../types";
 import { TodoIndex } from "../lib/todoIndex";
 import { getDueDateStatus, formatDueDate } from "../utility/dueDateParser";
 
+const DISPLAY_TEXT = "My todos";
+
 export class MyTodosView extends ItemView {
   private todoIndex: TodoIndex;
   private unsubscribe: (() => void) | null = null;
@@ -17,7 +19,7 @@ export class MyTodosView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "My Todos";
+    return DISPLAY_TEXT;
   }
 
   getIcon(): string {
@@ -43,7 +45,7 @@ export class MyTodosView extends ItemView {
     container.addClass("notepack-view");
 
     const header = container.createDiv({ cls: "notepack-view-header" });
-    header.createEl("h4", { text: "My Todos" });
+    header.createEl("h4", { text: DISPLAY_TEXT });
 
     const todos = this.todoIndex.getMyTodos();
 

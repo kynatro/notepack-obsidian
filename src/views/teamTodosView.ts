@@ -4,6 +4,8 @@ import { TodoIndex } from "../lib/todoIndex";
 import { getTeamMembers } from "../utility/team";
 import { getDueDateStatus, formatDueDate } from "../utility/dueDateParser";
 
+const DISPLAY_TEXT = "Team todos";
+
 export class TeamTodosView extends ItemView {
   private todoIndex: TodoIndex;
   private settings: NotePackSettings;
@@ -25,7 +27,7 @@ export class TeamTodosView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "Team Todos";
+    return DISPLAY_TEXT;
   }
 
   getIcon(): string {
@@ -59,7 +61,7 @@ export class TeamTodosView extends ItemView {
     container.addClass("notepack-view");
 
     const header = container.createDiv({ cls: "notepack-view-header" });
-    header.createEl("h4", { text: "Team Todos" });
+    header.createEl("h4", { text: DISPLAY_TEXT });
 
     // Team member selector
     const members = getTeamMembers(this.app, this.settings);
