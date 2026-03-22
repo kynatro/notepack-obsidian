@@ -38,7 +38,7 @@ jobs:
 
       - name: Generate changelog
         run: |
-          VERSION="v${{ steps.version.outputs.version }}"
+          VERSION="${{ steps.version.outputs.version }}"
           PREV_TAG=$(git tag --sort=-version:refname | grep -v "^${VERSION}$" | head -1)
 
           if [ -z "$PREV_TAG" ]; then
@@ -66,7 +66,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION="v${{ steps.version.outputs.version }}"
+          VERSION="${{ steps.version.outputs.version }}"
 
           gh release create "$VERSION" \
             --title "NotePack ${VERSION}" \
