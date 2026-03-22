@@ -62,13 +62,13 @@ export default class NotePackPlugin extends Plugin {
       callback: () => {
         new TeamMemberModal(this.app, this.settings, (member) => {
           (async () => {
-          await this.activateView(VIEW_TYPE_TEAM_TODOS);
-          // Find the view and set the selected member
-          const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_TEAM_TODOS);
-          for (const leaf of leaves) {
-            const view = leaf.view as TeamTodosView;
-            view.setSelectedMember(member.name);
-          }
+            await this.activateView(VIEW_TYPE_TEAM_TODOS);
+            // Find the view and set the selected member
+            const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_TEAM_TODOS);
+            for (const leaf of leaves) {
+              const view = leaf.view as TeamTodosView;
+              view.setSelectedMember(member.name);
+            }
           })().catch(console.error);
         }).open();
       },
@@ -151,11 +151,11 @@ export default class NotePackPlugin extends Plugin {
         if (file instanceof TFile && file.extension === "md") {
           // Wait a tick for the metadata cache to process the rename
           setTimeout(() => {
-(async () => {
-            const cache = this.app.metadataCache.getFileCache(file);
-            const content = await this.app.vault.cachedRead(file);
-await this.todoIndex.updateFile(file, content, cache ?? undefined);
-})().catch(console.error);
+            (async () => {
+              const cache = this.app.metadataCache.getFileCache(file);
+              const content = await this.app.vault.cachedRead(file);
+              await this.todoIndex.updateFile(file, content, cache ?? undefined);
+            })().catch(console.error);
           }, 200);
         }
       })
