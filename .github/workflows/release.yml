@@ -34,7 +34,7 @@ jobs:
 
       - name: Read version
         id: version
-        run: echo "version=$(node -p "require('./src/manifest.json').version")" >> $GITHUB_OUTPUT
+        run: echo "version=$(node -p "require('./manifest.json').version")" >> $GITHUB_OUTPUT
 
       - name: Generate changelog
         run: |

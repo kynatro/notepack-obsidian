@@ -1,8 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
-const manifestPath = path.join(__dirname, '../src/manifest.json');
+const manifestPath = path.join(__dirname, '../manifest.json');
 const { version } = require('../package.json');
 
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
