@@ -135,8 +135,7 @@ export class NotePackSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("End of day")
       .setDesc(
-        // eslint-disable-next-line obsidianmd/ui/sentence-case
-        'The time at which "end of day" due dates are considered overdue; defaults to 5:00 PM.'
+        'The time at which "end of day" due dates are considered overdue.'
       )
       .addDropdown((dropdown) => {
         const options: Record<string, string> = {};
@@ -156,8 +155,7 @@ export class NotePackSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("End of week")
       .setDesc(
-        // eslint-disable-next-line obsidianmd/ui/sentence-case
-        'The last day of the work week for "end of week" due dates; defaults to Saturday.'
+        'The last day of the work week for "end of week" due dates.'
       )
       .addDropdown((dropdown) =>
         dropdown

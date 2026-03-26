@@ -102,8 +102,7 @@ export default class NotePackPlugin extends Plugin {
     // ---------------------------------------------------------------
     // Ribbon icon
     // ---------------------------------------------------------------
-    // eslint-disable-next-line obsidianmd/ui/sentence-case
-    this.addRibbonIcon("check-square", "NotePack: My todos", () => {
+    this.addRibbonIcon("check-square", "My todos", () => {
       void this.activateView(VIEW_TYPE_MY_TODOS).catch(console.error);
     });
 
