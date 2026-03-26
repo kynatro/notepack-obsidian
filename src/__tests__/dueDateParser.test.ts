@@ -576,6 +576,45 @@ describe("parseDueDate – EOD compound (REF = Thursday Mar 5)", () => {
   });
 });
 
+// ─── parseDueDate – "end of day" compound ────────────────────────────────────
+
+describe("parseDueDate – 'end of day' compound (REF = Thursday Mar 5)", () => {
+  it("'end of day March 27' resolves to March 27 at endOfDayHour", () => {
+    const result = parseDueDate("due end of day March 27", REF, 17, 6);
+    expect(result).toEqual(d(2026, 3, 27, 17));
+  });
+
+  it("'end of day Monday' resolves to next Monday at endOfDayHour", () => {
+    const result = parseDueDate("due end of day Monday", REF, 17, 6);
+    expect(result).toEqual(d(2026, 3, 9, 17));
+  });
+
+  it("'end of day tomorrow' resolves to tomorrow at endOfDayHour", () => {
+    const result = parseDueDate("due end of day tomorrow", REF, 17, 6);
+    expect(result).toEqual(d(2026, 3, 6, 17));
+  });
+
+  it("'end of day 2026-03-15' resolves to ISO date at endOfDayHour", () => {
+    const result = parseDueDate("by end of day 2026-03-15", REF, 17, 6);
+    expect(result).toEqual(d(2026, 3, 15, 17));
+  });
+
+  it("'end-of-day March 15' resolves to named month date at endOfDayHour", () => {
+    const result = parseDueDate("due end-of-day March 15", REF, 17, 6);
+    expect(result).toEqual(d(2026, 3, 15, 17));
+  });
+
+  it("'end of day Friday' with 'by' trigger", () => {
+    const result = parseDueDate("by end of day Friday", REF, 17, 6);
+    expect(result).toEqual(d(2026, 3, 6, 17));
+  });
+
+  it("respects custom endOfDayHour", () => {
+    const result = parseDueDate("due end of day March 27", REF, 14, 6);
+    expect(result).toEqual(d(2026, 3, 27, 14));
+  });
+});
+
 // ─── getDueDateStatus ─────────────────────────────────────────────────────────
 
 describe("getDueDateStatus", () => {
