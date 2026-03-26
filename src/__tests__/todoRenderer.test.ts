@@ -297,6 +297,28 @@ describe("renderUrgentSection", () => {
     expect(groupLinks).toEqual(["b", "a"]);
   });
 
+  it("orders groups by due date regardless of getGroupNames sorting", () => {
+    // getGroupNames returns groups in reverse order (simulating showUndatedFirst preference)
+    const ctx = buildCtx(() => ["undated-group", "dated-group"]);
+    const container = mockElement();
+    const todos = [
+      makeTodo({ id: 1, text: "dated task", dueDate: pastDate(5), groupName: "dated-group", fileDate: "2024-01-01" }),
+      makeTodo({ id: 2, text: "undated task", dueDate: pastDate(1), groupName: "undated-group", fileDate: null }),
+    ];
+
+    renderUrgentSection(ctx, container as any, "Overdue", todos, "notepack-section-overdue");
+
+    // Groups should appear in due-date order (dated-group first since pastDate(5) < pastDate(1)),
+    // NOT in getGroupNames order (which would put undated-group first)
+    const section = container.children[0];
+    const groups = section.children.filter((c) => c.cls === "notepack-group");
+    const groupLinks = groups.map(
+      (g) => g.children.find((c) => c.cls === "notepack-group-header")!
+        .children.find((c) => c.tag === "a")!.text
+    );
+    expect(groupLinks).toEqual(["dated-group", "undated-group"]);
+  });
+
   it("groups todos by group name within the section", () => {
     const ctx = buildCtx();
     const container = mockElement();

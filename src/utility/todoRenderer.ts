@@ -79,7 +79,7 @@ export function renderUrgentSection(
     (a, b) => (a.dueDate?.getTime() ?? 0) - (b.dueDate?.getTime() ?? 0)
   );
 
-  renderTodoGroups(ctx, section, sorted, options);
+  renderTodoGroups(ctx, section, sorted, options, true);
 }
 
 /**
@@ -96,14 +96,21 @@ export function renderGroupedTodos(
 
 /**
  * Render todo groups with headers and items.
+ *
+ * When preserveOrder is true, group names are derived from the todo array
+ * in insertion order rather than re-sorted by file date preference. This
+ * keeps urgent sections ordered by due date.
  */
 function renderTodoGroups(
   ctx: TodoRenderContext,
   container: HTMLElement,
   todos: Todo[],
-  options?: RenderTodoItemOptions
+  options?: RenderTodoItemOptions,
+  preserveOrder?: boolean
 ): void {
-  const groups = ctx.todoIndex.getGroupNames(todos);
+  const groups = preserveOrder
+    ? getInsertionOrderGroupNames(todos)
+    : ctx.todoIndex.getGroupNames(todos);
 
   for (const group of groups) {
     const groupTodos = todos.filter((t) => t.groupName === group);
@@ -125,6 +132,21 @@ function renderTodoGroups(
       void renderTodoItem(ctx, list, todo, options).catch(console.error);
     }
   }
+}
+
+/**
+ * Get unique group names in the order they first appear in the todo array.
+ */
+function getInsertionOrderGroupNames(todos: Todo[]): string[] {
+  const seen = new Set<string>();
+  const groups: string[] = [];
+  for (const todo of todos) {
+    if (!seen.has(todo.groupName)) {
+      seen.add(todo.groupName);
+      groups.push(todo.groupName);
+    }
+  }
+  return groups;
 }
 
 /**
