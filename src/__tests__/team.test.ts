@@ -1,5 +1,5 @@
 import { App, TFile, TFolder } from "obsidian";
-import { formatAlias, getTeamMembers, getTeamMemberAliases } from "../utility/team";
+import { formatAlias, getTeamMembers, getTeamMemberAliases, getMentionOnlyNames, getAllTeamMembers } from "../utility/team";
 import { DEFAULT_SETTINGS, NotePackSettings } from "../types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -290,5 +290,78 @@ describe("getTeamMemberAliases", () => {
     const map = getTeamMemberAliases(app, settings);
     // Bob is processed after Alice, so his entry wins
     expect(map["shared"]).toBe("Bob");
+  });
+});
+
+// ─── getMentionOnlyNames ──────────────────────────────────────────────────────
+
+describe("getMentionOnlyNames", () => {
+  const folderMembers = [
+    { name: "Alice", aliases: [], isNonReporting: false },
+    { name: "Bob", aliases: [], isNonReporting: false },
+  ];
+
+  it("returns names that are assigned but have no folder", () => {
+    const assigned = ["Alice", "Bob", "Charlie"];
+    expect(getMentionOnlyNames(folderMembers, assigned)).toEqual(["Charlie"]);
+  });
+
+  it("returns empty array when all assigned names have folders", () => {
+    const assigned = ["Alice", "Bob"];
+    expect(getMentionOnlyNames(folderMembers, assigned)).toEqual([]);
+  });
+
+  it("returns empty array when no assigned names", () => {
+    expect(getMentionOnlyNames(folderMembers, [])).toEqual([]);
+  });
+
+  it("returns all assigned names when no folder members exist", () => {
+    const assigned = ["Charlie", "Dana"];
+    expect(getMentionOnlyNames([], assigned)).toEqual(["Charlie", "Dana"]);
+  });
+});
+
+// ─── getAllTeamMembers ────────────────────────────────────────────────────────
+
+describe("getAllTeamMembers", () => {
+  const folderMembers = [
+    { name: "Bob", aliases: ["b.smith"], isNonReporting: false },
+    { name: "Alice", aliases: [], isNonReporting: true },
+  ];
+
+  it("returns folder members and mention-only names sorted alphabetically", () => {
+    const assigned = ["Alice", "Bob", "Charlie"];
+    const result = getAllTeamMembers(folderMembers, assigned);
+    expect(result.map((m) => m.name)).toEqual(["Alice", "Bob", "Charlie"]);
+  });
+
+  it("preserves folder member properties", () => {
+    const assigned = ["Alice"];
+    const result = getAllTeamMembers(folderMembers, assigned);
+    const alice = result.find((m) => m.name === "Alice")!;
+    expect(alice.isNonReporting).toBe(true);
+    const bob = result.find((m) => m.name === "Bob")!;
+    expect(bob.aliases).toEqual(["b.smith"]);
+  });
+
+  it("creates bare TeamMember objects for mention-only names", () => {
+    const assigned = ["Charlie"];
+    const result = getAllTeamMembers(folderMembers, assigned);
+    const charlie = result.find((m) => m.name === "Charlie")!;
+    expect(charlie).toEqual({ name: "Charlie", aliases: [], isNonReporting: false });
+  });
+
+  it("returns only folder members when no assigned names", () => {
+    const result = getAllTeamMembers(folderMembers, []);
+    expect(result.map((m) => m.name)).toEqual(["Alice", "Bob"]);
+  });
+
+  it("returns only mention-only members when no folder members", () => {
+    const result = getAllTeamMembers([], ["Dana", "Charlie"]);
+    expect(result.map((m) => m.name)).toEqual(["Charlie", "Dana"]);
+  });
+
+  it("returns empty array when no members of either kind", () => {
+    expect(getAllTeamMembers([], [])).toEqual([]);
   });
 });

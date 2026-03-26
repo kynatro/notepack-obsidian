@@ -1,7 +1,7 @@
 import { ItemView, WorkspaceLeaf, MarkdownRenderer } from "obsidian";
 import { VIEW_TYPE_TEAM_TODOS, Todo, NotePackSettings } from "../types";
 import { TodoIndex } from "../lib/todoIndex";
-import { getTeamMembers } from "../utility/team";
+import { getTeamMembers, getAllTeamMembers } from "../utility/team";
 import { getDueDateStatus, formatDueDate } from "../utility/dueDateParser";
 
 const DISPLAY_TEXT = "Team todos";
@@ -68,13 +68,10 @@ export class TeamTodosView extends ItemView {
     // Build the full list of team member names: folder-based members first,
     // then any additional names found in @mentions that don't have folders.
     const folderMembers = getTeamMembers(this.app, this.settings);
-    const folderNames = new Set(folderMembers.map((m) => m.name));
     const assignedNames = this.todoIndex.getAssignedNames();
-    const mentionOnlyNames = assignedNames.filter((n) => !folderNames.has(n));
-    const allMemberNames = [
-      ...folderMembers.map((m) => m.name),
-      ...mentionOnlyNames,
-    ].sort((a, b) => a.localeCompare(b));
+    const allMemberNames = getAllTeamMembers(folderMembers, assignedNames).map(
+      (m) => m.name
+    );
 
     if (allMemberNames.length === 0) {
       container.createDiv({
