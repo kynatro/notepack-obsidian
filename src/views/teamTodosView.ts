@@ -65,13 +65,21 @@ export class TeamTodosView extends ItemView {
     const header = container.createDiv({ cls: "notepack-view-header" });
     header.createEl("h4", { text: DISPLAY_TEXT });
 
-    // Team member selector
-    const members = getTeamMembers(this.app, this.settings);
+    // Build the full list of team member names: folder-based members first,
+    // then any additional names found in @mentions that don't have folders.
+    const folderMembers = getTeamMembers(this.app, this.settings);
+    const folderNames = new Set(folderMembers.map((m) => m.name));
+    const assignedNames = this.todoIndex.getAssignedNames();
+    const mentionOnlyNames = assignedNames.filter((n) => !folderNames.has(n));
+    const allMemberNames = [
+      ...folderMembers.map((m) => m.name),
+      ...mentionOnlyNames,
+    ].sort((a, b) => a.localeCompare(b));
 
-    if (members.length === 0) {
+    if (allMemberNames.length === 0) {
       container.createDiv({
         cls: "notepack-empty",
-        text: `No team members found. Create subfolders with README.md files in your "${this.settings.teamFolder}" folder.`,
+        text: `No team members found. Create subfolders with README.md files in your "${this.settings.teamFolder}" folder or assign todos with @mentions.`,
       });
       return;
     }
@@ -88,13 +96,13 @@ export class TeamTodosView extends ItemView {
       this.render();
     });
 
-    for (const member of members) {
+    for (const name of allMemberNames) {
       const btn = selectorRow.createEl("button", {
-        text: member.name,
-        cls: `notepack-member-btn ${this.selectedMember === member.name ? "is-active" : ""}`,
+        text: name,
+        cls: `notepack-member-btn ${this.selectedMember === name ? "is-active" : ""}`,
       });
       btn.addEventListener("click", () => {
-        this.selectedMember = member.name;
+        this.selectedMember = name;
         this.render();
       });
     }
