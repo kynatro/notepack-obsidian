@@ -138,6 +138,22 @@ export class TodoIndex {
   }
 
   /**
+   * Get all unique assignee names from indexed todos, excluding "Me".
+   * Sorted alphabetically for stable display order.
+   */
+  getAssignedNames(): string[] {
+    const names = new Set<string>();
+    for (const todos of this.index.values()) {
+      for (const todo of todos) {
+        if (todo.assignedToAlias !== "Me") {
+          names.add(todo.assignedToAlias);
+        }
+      }
+    }
+    return [...names].sort((a, b) => a.localeCompare(b));
+  }
+
+  /**
    * Get todos that fall within a specific folder path.
    */
   getTodosInFolder(folderPath: string): Todo[] {

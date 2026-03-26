@@ -1,8 +1,8 @@
-import { ItemView, WorkspaceLeaf, MarkdownRenderer } from "obsidian";
+import { ItemView, WorkspaceLeaf } from "obsidian";
 import { VIEW_TYPE_TEAM_TODOS, Todo, NotePackSettings } from "../types";
 import { TodoIndex } from "../lib/todoIndex";
-import { getTeamMembers } from "../utility/team";
-import { getDueDateStatus, formatDueDate } from "../utility/dueDateParser";
+import { getTeamMembers, getAllTeamMembers } from "../utility/team";
+import { renderCategorizedTodos } from "../utility/todoRenderer";
 
 const DISPLAY_TEXT = "Team todos";
 
@@ -65,13 +65,18 @@ export class TeamTodosView extends ItemView {
     const header = container.createDiv({ cls: "notepack-view-header" });
     header.createEl("h4", { text: DISPLAY_TEXT });
 
-    // Team member selector
-    const members = getTeamMembers(this.app, this.settings);
+    // Build the full list of team member names: folder-based members first,
+    // then any additional names found in @mentions that don't have folders.
+    const folderMembers = getTeamMembers(this.app, this.settings);
+    const assignedNames = this.todoIndex.getAssignedNames();
+    const allMemberNames = getAllTeamMembers(folderMembers, assignedNames).map(
+      (m) => m.name
+    );
 
-    if (members.length === 0) {
+    if (allMemberNames.length === 0) {
       container.createDiv({
         cls: "notepack-empty",
-        text: `No team members found. Create subfolders with README.md files in your "${this.settings.teamFolder}" folder.`,
+        text: `No team members found. Create subfolders with README.md files in your "${this.settings.teamFolder}" folder or assign todos with @mentions.`,
       });
       return;
     }
@@ -88,13 +93,13 @@ export class TeamTodosView extends ItemView {
       this.render();
     });
 
-    for (const member of members) {
+    for (const name of allMemberNames) {
       const btn = selectorRow.createEl("button", {
-        text: member.name,
-        cls: `notepack-member-btn ${this.selectedMember === member.name ? "is-active" : ""}`,
+        text: name,
+        cls: `notepack-member-btn ${this.selectedMember === name ? "is-active" : ""}`,
       });
       btn.addEventListener("click", () => {
-        this.selectedMember = member.name;
+        this.selectedMember = name;
         this.render();
       });
     }
@@ -121,131 +126,11 @@ export class TeamTodosView extends ItemView {
     const count = container.createDiv({ cls: "notepack-count" });
     count.setText(`${todos.length} open todo${todos.length !== 1 ? "s" : ""}`);
 
-    const overdue = todos.filter(
-      (t) => t.dueDate && getDueDateStatus(t.dueDate) === "overdue"
+    renderCategorizedTodos(
+      { app: this.app, todoIndex: this.todoIndex, component: this },
+      container,
+      todos,
+      { showAssignee: true, hideAssignee: !!this.selectedMember }
     );
-    const dueSoon = todos.filter((t) => {
-      if (!t.dueDate) return false;
-      const s = getDueDateStatus(t.dueDate);
-      return s === "today" || s === "soon";
-    });
-    const regular = todos.filter(
-      (t) => !t.dueDate || getDueDateStatus(t.dueDate) === "future"
-    );
-
-    if (overdue.length > 0) {
-      this.renderUrgentSection(container, "Overdue", overdue, "notepack-section-overdue");
-    }
-    if (dueSoon.length > 0) {
-      this.renderUrgentSection(container, "Due soon", dueSoon, "notepack-section-due-soon");
-    }
-    if (regular.length > 0) {
-      this.renderGroupedTodos(container, regular);
-    }
-  }
-
-  private renderUrgentSection(
-    container: HTMLElement,
-    title: string,
-    todos: Todo[],
-    sectionCls: string
-  ): void {
-    const section = container.createDiv({
-      cls: `notepack-urgency-section ${sectionCls}`,
-    });
-    section.createDiv({ cls: "notepack-urgency-header", text: title });
-
-    const sorted = [...todos].sort(
-      (a, b) => (a.dueDate?.getTime() ?? 0) - (b.dueDate?.getTime() ?? 0)
-    );
-
-    const groups = this.todoIndex.getGroupNames(sorted);
-    for (const group of groups) {
-      const groupTodos = sorted.filter((t) => t.groupName === group);
-      if (groupTodos.length === 0) continue;
-
-      const groupEl = section.createDiv({ cls: "notepack-group" });
-      const groupHeader = groupEl.createDiv({ cls: "notepack-group-header" });
-      const link = groupHeader.createEl("a", {
-        text: group,
-        cls: "notepack-group-link",
-      });
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        void this.app.workspace.getLeaf(false).openFile(groupTodos[0].file).catch(console.error);
-      });
-
-      const list = groupEl.createEl("ul", { cls: "notepack-todo-list" });
-      for (const todo of groupTodos) {
-        void this.renderTodoItem(list, todo).catch(console.error);
-      }
-    }
-  }
-
-  private renderGroupedTodos(container: HTMLElement, todos: Todo[]): void {
-    const groups = this.todoIndex.getGroupNames(todos);
-
-    for (const group of groups) {
-      const groupTodos = todos.filter((t) => t.groupName === group);
-      if (groupTodos.length === 0) continue;
-
-      const groupEl = container.createDiv({ cls: "notepack-group" });
-
-      const groupHeader = groupEl.createDiv({ cls: "notepack-group-header" });
-      const link = groupHeader.createEl("a", {
-        text: group,
-        cls: "notepack-group-link",
-      });
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        void this.app.workspace.getLeaf(false).openFile(groupTodos[0].file).catch(console.error);
-      });
-
-      const list = groupEl.createEl("ul", { cls: "notepack-todo-list" });
-      for (const todo of groupTodos) {
-        void this.renderTodoItem(list, todo).catch(console.error);
-      }
-    }
-  }
-
-  private async renderTodoItem(list: HTMLElement, todo: Todo): Promise<void> {
-    const li = list.createEl("li", { cls: "notepack-todo-item" });
-
-    const checkbox = li.createEl("input", { type: "checkbox" });
-    checkbox.addClass("notepack-checkbox");
-    checkbox.addEventListener("change", () => { void this.checkOffTodo(todo).catch(console.error); });
-
-    const assignee = li.createSpan({
-      text: todo.assignedToAlias,
-      cls: "notepack-assignee",
-    });
-    // Hide the assignee badge when filtering to a single member (redundant)
-    if (this.selectedMember) assignee.addClass("notepack-hidden");
-
-    const text = li.createSpan({ cls: "notepack-todo-text" });
-    // Strip the @mention prefix since we show the assignee separately
-    const cleanText = todo.text.replace(/^@[A-Za-z.]+\s*/, "");
-    await MarkdownRenderer.render(this.app, cleanText, text, todo.file.path, this).catch(console.error);
-
-    if (todo.dueDate) {
-      const status = getDueDateStatus(todo.dueDate);
-      li.createSpan({
-        text: formatDueDate(todo.dueDate),
-        cls: `notepack-due-badge notepack-due-${status}`,
-      });
-    }
-  }
-
-  private async checkOffTodo(todo: Todo): Promise<void> {
-    await this.app.vault.process(todo.file, (content) => {
-      const lines = content.split("\n");
-      if (todo.lineNumber < lines.length) {
-        lines[todo.lineNumber] = lines[todo.lineNumber].replace(
-          /- \[ \]/,
-          "- [x]"
-        );
-      }
-      return lines.join("\n");
-    });
   }
 }

@@ -56,6 +56,33 @@ export function getTeamMembers(app: App, settings: NotePackSettings): TeamMember
 }
 
 /**
+ * Get names that appear in @mentions but don't have team folders.
+ */
+export function getMentionOnlyNames(
+  folderMembers: TeamMember[],
+  assignedNames: string[]
+): string[] {
+  const folderNames = new Set(folderMembers.map((m) => m.name));
+  return assignedNames.filter((n) => !folderNames.has(n));
+}
+
+/**
+ * Build the unified, sorted list of all team members: folder-based members
+ * plus any additional names found only in @mentions (as bare TeamMember
+ * objects with empty aliases and isNonReporting false).
+ */
+export function getAllTeamMembers(
+  folderMembers: TeamMember[],
+  assignedNames: string[]
+): TeamMember[] {
+  const mentionOnly = getMentionOnlyNames(folderMembers, assignedNames);
+  return [
+    ...folderMembers,
+    ...mentionOnly.map((name) => ({ name, aliases: [], isNonReporting: false })),
+  ].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
  * Build a lookup map from every known alias (lowercased, dot-delimited)
  * to the canonical team member name.
  *

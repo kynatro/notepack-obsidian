@@ -60,7 +60,7 @@ export default class NotePackPlugin extends Plugin {
       id: "show-team-member-todos",
       name: "Show team member todos",
       callback: () => {
-        new TeamMemberModal(this.app, this.settings, (member) => {
+        new TeamMemberModal(this.app, this.settings, this.todoIndex, (member) => {
           (async () => {
             await this.activateView(VIEW_TYPE_TEAM_TODOS);
             // Find the view and set the selected member
