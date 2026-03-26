@@ -119,42 +119,47 @@ function buildCtx(groupNamesFn?: (todos: Todo[]) => string[]) {
 describe("categorizeTodos", () => {
   it("places todos with past due dates in overdue", () => {
     const todos = [makeTodo({ text: "overdue task", dueDate: pastDate(5) })];
-    const { overdue, dueSoon, regular } = categorizeTodos(todos);
+    const { overdue, dueToday, dueSoon, regular } = categorizeTodos(todos);
     expect(overdue).toHaveLength(1);
+    expect(dueToday).toHaveLength(0);
     expect(dueSoon).toHaveLength(0);
     expect(regular).toHaveLength(0);
   });
 
-  it("places todos due today in dueSoon", () => {
+  it("places todos due today in dueToday", () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todos = [makeTodo({ text: "today task", dueDate: today })];
-    const { overdue, dueSoon, regular } = categorizeTodos(todos);
+    const { overdue, dueToday, dueSoon, regular } = categorizeTodos(todos);
     expect(overdue).toHaveLength(0);
-    expect(dueSoon).toHaveLength(1);
+    expect(dueToday).toHaveLength(1);
+    expect(dueSoon).toHaveLength(0);
     expect(regular).toHaveLength(0);
   });
 
   it("places todos due within 7 days in dueSoon", () => {
     const todos = [makeTodo({ text: "soon task", dueDate: futureDate(3) })];
-    const { overdue, dueSoon, regular } = categorizeTodos(todos);
+    const { overdue, dueToday, dueSoon, regular } = categorizeTodos(todos);
     expect(overdue).toHaveLength(0);
+    expect(dueToday).toHaveLength(0);
     expect(dueSoon).toHaveLength(1);
     expect(regular).toHaveLength(0);
   });
 
   it("places todos due far in the future in regular", () => {
     const todos = [makeTodo({ text: "future task", dueDate: futureDate(30) })];
-    const { overdue, dueSoon, regular } = categorizeTodos(todos);
+    const { overdue, dueToday, dueSoon, regular } = categorizeTodos(todos);
     expect(overdue).toHaveLength(0);
+    expect(dueToday).toHaveLength(0);
     expect(dueSoon).toHaveLength(0);
     expect(regular).toHaveLength(1);
   });
 
   it("places todos without due dates in regular", () => {
     const todos = [makeTodo({ text: "no date", dueDate: null })];
-    const { overdue, dueSoon, regular } = categorizeTodos(todos);
+    const { overdue, dueToday, dueSoon, regular } = categorizeTodos(todos);
     expect(overdue).toHaveLength(0);
+    expect(dueToday).toHaveLength(0);
     expect(dueSoon).toHaveLength(0);
     expect(regular).toHaveLength(1);
   });
@@ -167,15 +172,17 @@ describe("categorizeTodos", () => {
       makeTodo({ id: 4, text: "future", dueDate: futureDate(30) }),
       makeTodo({ id: 5, text: "no date", dueDate: null }),
     ];
-    const { overdue, dueSoon, regular } = categorizeTodos(todos);
+    const { overdue, dueToday, dueSoon, regular } = categorizeTodos(todos);
     expect(overdue).toHaveLength(1);
-    expect(dueSoon).toHaveLength(2);
+    expect(dueToday).toHaveLength(1);
+    expect(dueSoon).toHaveLength(1);
     expect(regular).toHaveLength(2);
   });
 
   it("returns empty arrays when given no todos", () => {
-    const { overdue, dueSoon, regular } = categorizeTodos([]);
+    const { overdue, dueToday, dueSoon, regular } = categorizeTodos([]);
     expect(overdue).toHaveLength(0);
+    expect(dueToday).toHaveLength(0);
     expect(dueSoon).toHaveLength(0);
     expect(regular).toHaveLength(0);
   });
@@ -227,18 +234,36 @@ describe("renderCategorizedTodos", () => {
     expect(group).toBeDefined();
   });
 
-  it("renders all three sections for mixed todos", () => {
+  it("renders due today section when today todos exist", () => {
     const ctx = buildCtx();
     const container = mockElement();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todos = [makeTodo({ text: "today", dueDate: today })];
+
+    renderCategorizedTodos(ctx, container as any, todos);
+
+    const section = container.children.find((c) =>
+      c.cls.includes("notepack-section-due-today")
+    );
+    expect(section).toBeDefined();
+  });
+
+  it("renders all four sections for mixed todos", () => {
+    const ctx = buildCtx();
+    const container = mockElement();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const todos = [
       makeTodo({ id: 1, text: "late", dueDate: pastDate(3) }),
-      makeTodo({ id: 2, text: "soon", dueDate: futureDate(2) }),
-      makeTodo({ id: 3, text: "later", dueDate: futureDate(30) }),
+      makeTodo({ id: 2, text: "today", dueDate: today }),
+      makeTodo({ id: 3, text: "soon", dueDate: futureDate(2) }),
+      makeTodo({ id: 4, text: "later", dueDate: futureDate(30) }),
     ];
 
     renderCategorizedTodos(ctx, container as any, todos);
 
-    expect(container.children.length).toBe(3);
+    expect(container.children.length).toBe(4);
   });
 
   it("renders nothing when given empty array", () => {

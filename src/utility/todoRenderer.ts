@@ -15,26 +15,28 @@ interface RenderTodoItemOptions {
 }
 
 /**
- * Categorize todos into overdue, due-soon, and regular buckets.
+ * Categorize todos into overdue, due-today, due-soon, and regular buckets.
  */
 export function categorizeTodos(todos: Todo[]): {
   overdue: Todo[];
+  dueToday: Todo[];
   dueSoon: Todo[];
   regular: Todo[];
 } {
   const overdue = todos.filter(
     (t) => t.dueDate && getDueDateStatus(t.dueDate) === "overdue"
   );
-  const dueSoon = todos.filter((t) => {
-    if (!t.dueDate) return false;
-    const s = getDueDateStatus(t.dueDate);
-    return s === "today" || s === "soon";
-  });
+  const dueToday = todos.filter(
+    (t) => t.dueDate && getDueDateStatus(t.dueDate) === "today"
+  );
+  const dueSoon = todos.filter(
+    (t) => t.dueDate && getDueDateStatus(t.dueDate) === "soon"
+  );
   const regular = todos.filter(
     (t) => !t.dueDate || getDueDateStatus(t.dueDate) === "future"
   );
 
-  return { overdue, dueSoon, regular };
+  return { overdue, dueToday, dueSoon, regular };
 }
 
 /**
@@ -46,10 +48,13 @@ export function renderCategorizedTodos(
   todos: Todo[],
   options?: RenderTodoItemOptions
 ): void {
-  const { overdue, dueSoon, regular } = categorizeTodos(todos);
+  const { overdue, dueToday, dueSoon, regular } = categorizeTodos(todos);
 
   if (overdue.length > 0) {
     renderUrgentSection(ctx, container, "Overdue", overdue, "notepack-section-overdue", options);
+  }
+  if (dueToday.length > 0) {
+    renderUrgentSection(ctx, container, "Due today", dueToday, "notepack-section-due-today", options);
   }
   if (dueSoon.length > 0) {
     renderUrgentSection(ctx, container, "Due soon", dueSoon, "notepack-section-due-soon", options);
