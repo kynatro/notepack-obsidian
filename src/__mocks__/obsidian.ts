@@ -36,12 +36,16 @@ export class Notice {
   constructor(_msg: string) {}
 }
 
+export class Component {}
 export class App {}
 export class Plugin {}
 export class ItemView {}
 export class WorkspaceLeaf {}
 export class PluginSettingTab {}
-export const MarkdownRenderer = { renderMarkdown: jest.fn() };
+export const MarkdownRenderer = {
+  renderMarkdown: jest.fn().mockResolvedValue(undefined),
+  render: jest.fn().mockResolvedValue(undefined),
+};
 export function normalizePath(path: string): string {
   return path.replace(/\\/g, "/").replace(/\/+/g, "/").replace(/\/$/, "");
 }

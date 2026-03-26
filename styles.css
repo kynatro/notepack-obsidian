@@ -161,17 +161,17 @@
 
 .notepack-due-overdue {
   background-color: var(--color-red);
-  color: var(--text-on-accent);
+  color: var(--tag-color);
 }
 
 .notepack-due-today {
   background-color: var(--color-orange);
-  color: var(--text-on-accent);
+  color: var(--tag-color);
 }
 
 .notepack-due-soon {
-  background-color: var(--color-green);
-  color: var(--text-on-accent);
+  background-color: var(--tag-background);
+  color: var(--tag-color);
 }
 
 .notepack-due-future {
@@ -180,7 +180,7 @@
 }
 
 /* ============================================================
-   Urgency Sections (Overdue / Due Soon)
+   Urgency Sections (Overdue / Due Today / Due Soon)
    ============================================================ */
 
 .notepack-urgency-section {
@@ -203,8 +203,13 @@
   color: var(--text-on-accent);
 }
 
-.notepack-section-due-soon .notepack-urgency-header {
+.notepack-section-due-today .notepack-urgency-header {
   background-color: var(--color-orange);
+  color: var(--text-on-accent);
+}
+
+.notepack-section-due-soon .notepack-urgency-header {
+  background-color: var(--color-green);
   color: var(--text-on-accent);
 }
 

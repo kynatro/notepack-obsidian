@@ -649,6 +649,84 @@ describe("TodoIndex.getMyTodos", () => {
   });
 });
 
+// ─── getAssignedNames ─────────────────────────────────────────────────────────
+
+describe("TodoIndex.getAssignedNames", () => {
+  it("returns unique assignee names excluding Me", async () => {
+    const app = buildMockApp({
+      "notes/a.md": "- [ ] @Alice task\n- [ ] @Bob task\n- [ ] My task",
+    });
+    const idx = new TodoIndex(app, baseSettings);
+    await idx.rebuild();
+    const names = idx.getAssignedNames();
+    expect(names).toEqual(["Alice", "Bob"]);
+  });
+
+  it("returns empty array when no assigned todos exist", async () => {
+    const app = buildMockApp({
+      "notes/a.md": "- [ ] Unassigned task",
+    });
+    const idx = new TodoIndex(app, baseSettings);
+    await idx.rebuild();
+    expect(idx.getAssignedNames()).toEqual([]);
+  });
+
+  it("deduplicates names across files", async () => {
+    const app = buildMockApp({
+      "notes/a.md": "- [ ] @Alice task one",
+      "notes/b.md": "- [ ] @Alice task two",
+    });
+    const idx = new TodoIndex(app, baseSettings);
+    await idx.rebuild();
+    expect(idx.getAssignedNames()).toEqual(["Alice"]);
+  });
+
+  it("returns names sorted alphabetically", async () => {
+    const app = buildMockApp({
+      "notes/a.md": "- [ ] @Charlie task\n- [ ] @Alice task\n- [ ] @Bob task",
+    });
+    const idx = new TodoIndex(app, baseSettings);
+    await idx.rebuild();
+    expect(idx.getAssignedNames()).toEqual(["Alice", "Bob", "Charlie"]);
+  });
+
+  it("uses resolved alias names", async () => {
+    const aliceFolder = new TFolder("Team/Alice");
+    const readmeFile = new TFile("Team/Alice/README.md");
+    aliceFolder.children = [readmeFile];
+
+    const app = buildMockApp(
+      {
+        "notes/a.md": "- [ ] @ali do work",
+        "Team/Alice/README.md": "---\naliases: []\n---\n",
+      },
+      {
+        Team: ["Team/Alice"],
+      }
+    );
+
+    // Override to provide proper team folder structure
+    const teamFolder = new TFolder("Team");
+    teamFolder.children = [aliceFolder];
+    (app.vault as any).getAbstractFileByPath = ((original) => (path: string) => {
+      if (path === "Team") return teamFolder;
+      if (path === "Team/Alice/README.md") return readmeFile;
+      return original(path);
+    })((app.vault as any).getAbstractFileByPath);
+
+    (app.metadataCache as any).getFileCache = ((original) => (file: TFile) => {
+      if (file.path === "Team/Alice/README.md") {
+        return { frontmatter: { aliases: ["ali"] } };
+      }
+      return original(file);
+    })((app.metadataCache as any).getFileCache);
+
+    const idx = new TodoIndex(app, baseSettings);
+    await idx.rebuild();
+    expect(idx.getAssignedNames()).toEqual(["Alice"]);
+  });
+});
+
 // ─── getTodosInFolder ────────────────────────────────────────────────────────
 
 describe("TodoIndex.getTodosInFolder", () => {

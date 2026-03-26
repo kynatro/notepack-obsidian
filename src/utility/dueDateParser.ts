@@ -67,6 +67,7 @@ const DATE_CHUNK =
   `|${NEXT_PERIOD_RE}` +                                                // next week / next month / next year
   `|${OPTIONAL_NEXT_WEEKDAY_RE}` +                                      // [next] weekday
   `|eod\\s+(?:${SIMPLE_DATE})` +                                        // EOD compound: "EOD Monday"
+  `|end[\\s\\-]of[\\s\\-]day\\s+(?:${SIMPLE_DATE})` +                  // "end of day Monday"
   `|eod|eow|eom|eoq|eoy` +                                             // abbreviations (compound before standalone)
   `|${END_OF_NEXT_RE}` +                                                // end of next week/month/year
   `|end[\\s\\-]of[\\s\\-](?:day|week|month|quarter|year)` +            // spelled out
@@ -107,10 +108,12 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
   }
 
   // EOD <date> compound (e.g. "eod monday", "eod march 15", "eod 2026-03-09")
-  // The compound alternative in DATE_CHUNK ensures the full "eod <date>" string is
+  // Also handles spelled-out "end of day <date>" and "end-of-day <date>".
+  // The compound alternative in DATE_CHUNK ensures the full string is
   // captured as one unit; here we strip the prefix and resolve the date part.
-  if (s.startsWith("eod ")) {
-    const baseDate = parseAbsoluteDate(s.slice(4), ref, endOfDayHour, endOfWeekDay);
+  const eodCompoundMatch = s.match(/^(?:eod|end[\s-]of[\s-]day)\s+(.+)$/);
+  if (eodCompoundMatch) {
+    const baseDate = parseAbsoluteDate(eodCompoundMatch[1], ref, endOfDayHour, endOfWeekDay);
     if (baseDate) {
       return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), endOfDayHour, 0, 0);
     }
