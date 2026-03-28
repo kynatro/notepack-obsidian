@@ -1,3 +1,4 @@
+[![Build](https://github.com/kynatro/notepack-obsidian/actions/workflows/build.yml/badge.svg)](https://github.com/kynatro/notepack-obsidian/actions/workflows/build.yml)
 [![Tests](https://github.com/kynatro/notepack-obsidian/actions/workflows/test.yml/badge.svg)](https://github.com/kynatro/notepack-obsidian/actions/workflows/test.yml)
 [![CodeQL](https://github.com/kynatro/notepack-obsidian/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/kynatro/notepack-obsidian/actions/workflows/github-code-scanning/codeql)
 
