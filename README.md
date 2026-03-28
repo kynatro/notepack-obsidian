@@ -44,7 +44,8 @@ Trigger phrases: `due by`, `due on`, `due at`, `due`, `by`
 | US date | `3/15`, `3/15/2026` |
 | Named month | `March 15`, `Mar 15, 2026` |
 | Relative | `today`, `tomorrow` |
-| Weekday | `Friday`, `next Monday` |
+| Weekday | `Friday` — nearest upcoming occurrence |
+| Next weekday | `next Monday` — that weekday in the following calendar week |
 | EOD | `EOD` — end of day at the configured hour |
 | EOD compound | `EOD Monday`, `EOD March 15`, `EOD tomorrow` |
 | EOW | `EOW`, `end of week` — last day of the configured work week at 23:59 |
