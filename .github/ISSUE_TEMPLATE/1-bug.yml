@@ -2,9 +2,6 @@ name: Bug Report
 description: File a bug report.
 title: 'BUG: '
 labels: ['bug']
-assignees:
-  - kynatro
-type: bug
 body:
   - type: markdown
     attributes:
@@ -32,8 +29,8 @@ body:
     attributes:
       label: Version
       description: What version of our software are you running? Check the _Community plugins_ section of your Obsidian settings.
-	validations:
-	  required: true
+    validations:
+      required: true
   - type: textarea
     id: logs
     attributes:
