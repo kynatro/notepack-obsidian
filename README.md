@@ -1,3 +1,6 @@
+[![Tests](https://github.com/kynatro/notepack-obsidian/actions/workflows/test.yml/badge.svg)](https://github.com/kynatro/notepack-obsidian/actions/workflows/test.yml)
+[![CodeQL](https://github.com/kynatro/notepack-obsidian/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/kynatro/notepack-obsidian/actions/workflows/github-code-scanning/codeql)
+
 # NotePack for Obsidian
 
 Todo collation with team management — an Obsidian plugin port of [notepack-cli](https://github.com/kynatro/notepack-cli).
