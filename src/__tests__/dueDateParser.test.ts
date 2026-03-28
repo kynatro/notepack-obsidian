@@ -178,8 +178,8 @@ describe("parseDueDate – weekdays (REF = Thursday Mar 5)", () => {
     expect(parseDueDate("due by monday", REF)).toEqual(d(2026, 3, 9));
   });
 
-  it("resolves 'next monday' to the Monday of the week after next from Thursday", () => {
-    expect(parseDueDate("due by next monday", REF)).toEqual(d(2026, 3, 16));
+  it("resolves 'next monday' to the Monday of next calendar week from Thursday", () => {
+    expect(parseDueDate("due by next monday", REF)).toEqual(d(2026, 3, 9));
   });
 
   it("resolves 'saturday' to 2 days ahead", () => {

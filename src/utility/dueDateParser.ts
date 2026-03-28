@@ -184,7 +184,7 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
     return new Date(ref.getFullYear() + 1, JANUARY, 1);
   }
 
-  // [next] weekday — bare weekday = next occurrence; "next" prefix skips one additional week
+  // [next] weekday — bare weekday = next occurrence; "next" prefix = that weekday in next calendar week
   const weekdayMatch = s.match(
     new RegExp(`^(next\\s+)?(${WEEKDAY_RE})$`)
   );
@@ -192,9 +192,15 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
     const hasNext = !!weekdayMatch[1];
     const target = WEEKDAY_NAMES[weekdayMatch[2]];
     const today = startOfDay(ref);
+    if (hasNext) {
+      // "next <weekday>" — resolve to that weekday in the following calendar week
+      const daysUntilNextSunday = (DAYS_PER_WEEK - today.getDay()) % DAYS_PER_WEEK || DAYS_PER_WEEK;
+      const d = new Date(today);
+      d.setDate(today.getDate() + daysUntilNextSunday + target);
+      return d;
+    }
     let diff = target - today.getDay();
     if (diff <= 0) diff += DAYS_PER_WEEK;
-    if (hasNext) diff += DAYS_PER_WEEK;
     const d = new Date(today);
     d.setDate(d.getDate() + diff);
     return d;
