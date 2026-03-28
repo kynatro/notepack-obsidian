@@ -283,6 +283,29 @@ export function getDueDateStatus(date: Date): "overdue" | "today" | "soon" | "fu
 }
 
 /**
+ * Return the number of days a date is overdue (minimum 1).
+ * Returns null if the date is not overdue.
+ */
+export function getOverdueDays(date: Date): number | null {
+  const now = new Date();
+  const diff = daysDiff(date, now); // negative when date is in the past
+  if (diff < 0) return Math.max(1, Math.abs(diff));
+  if (diff === 0 && (date.getHours() !== 0 || date.getMinutes() !== 0) && date <= now) {
+    return 1;
+  }
+  return null;
+}
+
+/**
+ * Format an overdue duration for compact display (e.g. "3d", "2w", "1mo").
+ */
+export function formatOverdueDays(days: number): string {
+  if (days < 14) return `${days}d`;
+  if (days < 60) return `${Math.floor(days / 7)}w`;
+  return `${Math.floor(days / 30)}mo`;
+}
+
+/**
  * Format a due date for compact display.
  */
 export function formatDueDate(date: Date): string {

@@ -1,7 +1,7 @@
 import { App, Component, MarkdownRenderer } from "obsidian";
 import { Todo } from "../types";
 import { TodoIndex } from "../lib/todoIndex";
-import { getDueDateStatus, formatDueDate } from "./dueDateParser";
+import { getDueDateStatus, formatDueDate, getOverdueDays, formatOverdueDays } from "./dueDateParser";
 
 interface TodoRenderContext {
   app: App;
@@ -187,10 +187,17 @@ export async function renderTodoItem(
 
   if (todo.dueDate) {
     const status = getDueDateStatus(todo.dueDate);
-    li.createSpan({
+    const badge = li.createSpan({
       text: formatDueDate(todo.dueDate),
       cls: `notepack-due-badge notepack-due-${status}`,
     });
+    const overdueDays = getOverdueDays(todo.dueDate);
+    if (overdueDays !== null) {
+      badge.createSpan({
+        text: ` +${formatOverdueDays(overdueDays)}`,
+        cls: "notepack-overdue-count",
+      });
+    }
   }
 }
 

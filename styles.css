@@ -161,22 +161,34 @@
 
 .notepack-due-overdue {
   background-color: var(--color-red);
-  color: var(--tag-color);
+  color: var(--text-on-accent);
+  padding-inline-end: 0;
+  padding-block: 0;
 }
 
 .notepack-due-today {
   background-color: var(--color-orange);
-  color: var(--tag-color);
+  color: var(--text-on-accent);
 }
 
 .notepack-due-soon {
-  background-color: var(--tag-background);
-  color: var(--tag-color);
+  background-color: color-mix(in srgb, var(--color-green) 70%, rgb(var(--mono-rgb-0)) 30%);
+  color: var(--text-on-accent);
 }
 
 .notepack-due-future {
   background-color: var(--tag-background);
-  color: var(--tag-color);
+  color: var(--text-on-accent);
+}
+
+.notepack-overdue-count {
+  display: inline-block;
+  font-weight: 700;
+  padding: 3px 7px 3px 6px;
+  background-color: rgba(var(--mono-rgb-0), 0.3);
+  border-start-end-radius: 4px;
+  border-end-end-radius: 4px;
+  margin-inline-start: 6px;
 }
 
 /* ============================================================
