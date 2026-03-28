@@ -8,4 +8,5 @@ This is an Obsidian plugin and should follow all best-practice guidelines. Whene
 
 # Coding best-practices
 
-After making modifications, always run `npm run build` to ensure the project builds properly and `npm test` to verify operation.
+- After making modifications to JavaScript files run `npm run build` to ensure the project builds properly and `npm test` to verify operation.
+- When modifications have been made, always make sure ARCHITECTURE.md and README.md are up-to-date

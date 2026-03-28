@@ -133,6 +133,8 @@ Event listeners:
   - Special: EOD, EOW, EOM, EOQ, EOY (with compounds like "EOD Monday")
   - Handles "next week/month/year"
 - `getDueDateStatus(date)` → "overdue" | "today" | "soon" | "future"
+- `getOverdueDays(date)` → Number of days overdue (minimum 1), or null if not overdue
+- `formatOverdueDays(days)` → Compact display string ("3d", "2w", "1mo")
 - `formatDueDate(date)` → Display string ("Today", "Tomorrow", "Mar 15")
 - `parseDateString(str)` → Parse YYYY-MM-DD / YYYY-MM / YYYY from filenames
 
@@ -145,9 +147,10 @@ Event listeners:
 - `formatAlias()` - Normalize to lowercase dot-delimited ("John Doe" → "john.doe")
 
 ### Todo Renderer (`src/utility/todoRenderer.ts`)
-- `categorizeTodos(todos)` → `{ overdue, dueSoon, regular }` buckets
+- `categorizeTodos(todos)` → `{ overdue, dueToday, dueSoon, regular }` buckets
 - `renderCategorizedTodos(ctx, container, todos, options)` - Render with urgency sections
-- `renderGroupedTodos(ctx, container, todos)` - Group by file/folder and render
+- `renderUrgentSection(ctx, container, title, todos, sectionCls, options)` - Render overdue/due-today/due-soon section with header and sorted todos
+- `renderGroupedTodos(ctx, container, todos, options)` - Group by file/folder and render
 - `renderTodoItem(ctx, list, todo, options)` - Single item: checkbox + assignee + text + due badge
 - `checkOffTodo(ctx, todo)` - Replace "- [ ]" with "- [x]" in source file
 
