@@ -510,6 +510,33 @@ describe("renderTodoItem", () => {
     expect(badge.cls).toContain("notepack-due-overdue");
   });
 
+  it("renders overdue count indicator for overdue todos", async () => {
+    const ctx = buildCtx();
+    const list = mockElement("ul");
+    const todo = makeTodo({ text: "late", dueDate: pastDate(5) });
+
+    await renderTodoItem(ctx, list as any, todo);
+
+    const li = list.children[0];
+    const badge = li.children.find((c) => c.cls.includes("notepack-due-badge"))!;
+    const countSpan = badge.children.find((c) => c.cls.includes("notepack-overdue-count"));
+    expect(countSpan).toBeDefined();
+    expect(countSpan!.text).toContain("+5d");
+  });
+
+  it("does not render overdue count for future due dates", async () => {
+    const ctx = buildCtx();
+    const list = mockElement("ul");
+    const todo = makeTodo({ text: "task", dueDate: futureDate(30) });
+
+    await renderTodoItem(ctx, list as any, todo);
+
+    const li = list.children[0];
+    const badge = li.children.find((c) => c.cls.includes("notepack-due-badge"))!;
+    const countSpan = badge.children.find((c) => c.cls.includes("notepack-overdue-count"));
+    expect(countSpan).toBeUndefined();
+  });
+
   it("does not show assignee badge by default", async () => {
     const ctx = buildCtx();
     const list = mockElement("ul");
