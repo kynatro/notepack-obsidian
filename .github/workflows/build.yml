@@ -1,17 +1,13 @@
-name: Tests
+name: Build
+
+on:
+  workflow_call:
 
 permissions:
   contents: read
 
-on:
-  workflow_call:
-  pull_request:
-    branches:
-      - dev
-      - main
-
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,5 +23,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm test
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            main.js
+            manifest.json
+            styles.css
