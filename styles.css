@@ -131,6 +131,9 @@
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
 }
 
 .notepack-member-btn:hover {
@@ -142,6 +145,24 @@
   background: var(--interactive-accent);
   color: var(--text-on-accent);
   border-color: var(--interactive-accent);
+}
+
+.notepack-member-indicator {
+  display: inline-block;
+  border-radius: 50%;
+  background: var(--text-accent);
+  color: var(--text-on-accent);
+  height: 16px;
+  width: 16px;
+  line-height: 16px;
+  font-size: 11px;
+  font-weight: bold;
+  vertical-align: middle;
+}
+
+.notepack-member-btn.is-active .notepack-member-indicator {
+  background: var(--text-on-accent);
+  color: var(--text-accent);
 }
 
 /* ============================================================

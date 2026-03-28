@@ -98,6 +98,12 @@ export class TeamTodosView extends ItemView {
         text: name,
         cls: `notepack-member-btn ${this.selectedMember === name ? "is-active" : ""}`,
       });
+      if (this.todoIndex.getTodosFor(name).length > 0) {
+        btn.createSpan({
+          text: `${this.todoIndex.getTodosFor(name).length}`,
+          cls: "notepack-member-indicator"
+        });
+      }
       btn.addEventListener("click", () => {
         this.selectedMember = name;
         this.render();

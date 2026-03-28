@@ -32,7 +32,14 @@ export class TeamMemberModal extends FuzzySuggestModal<TeamMember> {
   }
 
   getItemText(member: TeamMember): string {
-    return member.name;
+    const textItems = [member.name];
+    const todoCount = this.todoIndex.getTodosFor(member.name).length;
+    
+    if (todoCount > 0) {
+      textItems.push(`(${todoCount})`)
+    }
+
+    return textItems.join(' ');
   }
 
   onChooseItem(member: TeamMember): void {
