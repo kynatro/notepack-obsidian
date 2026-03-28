@@ -68,6 +68,63 @@ describe("parseDueDate – returns null", () => {
   });
 });
 
+// ─── parseDueDate – "on" trigger ────────────────────────────────────────────
+
+describe("parseDueDate – 'on' trigger (REF = Thursday Mar 5)", () => {
+  it("parses 'on Monday' as next Monday", () => {
+    expect(
+      parseDueDate("Check in on status of conversation with TSE on Monday", REF)
+    ).toEqual(d(2026, 3, 9));
+  });
+
+  it("parses 'on Friday' as next Friday", () => {
+    expect(parseDueDate("Follow up on Friday", REF)).toEqual(d(2026, 3, 6));
+  });
+
+  it("parses 'on March 15'", () => {
+    expect(parseDueDate("Submit report on March 15", REF)).toEqual(
+      d(2026, 3, 15)
+    );
+  });
+
+  it("parses 'on 2026-03-20'", () => {
+    expect(parseDueDate("Review PR on 2026-03-20", REF)).toEqual(
+      d(2026, 3, 20)
+    );
+  });
+
+  it("parses 'on tomorrow'", () => {
+    expect(parseDueDate("Send email on tomorrow", REF)).toEqual(
+      d(2026, 3, 6)
+    );
+  });
+
+  it("ignores 'on' followed by a non-date word", () => {
+    expect(parseDueDate("work on the report", REF)).toBeNull();
+  });
+
+  it("ignores 'on' followed by non-date word even with date later", () => {
+    // "on status" doesn't match DATE_CHUNK, so falls through
+    expect(parseDueDate("Check on status", REF)).toBeNull();
+  });
+
+  it("'due by' takes priority over 'on'", () => {
+    expect(
+      parseDueDate("Meeting on Monday due by Friday", REF)
+    ).toEqual(d(2026, 3, 6));
+  });
+
+  it("parses abbreviated weekday 'on Wed'", () => {
+    expect(parseDueDate("Call client on Wed", REF)).toEqual(d(2026, 3, 11));
+  });
+
+  it("parses 'on next Monday'", () => {
+    expect(parseDueDate("Deliver package on next Monday", REF)).toEqual(
+      d(2026, 3, 9)
+    );
+  });
+});
+
 // ─── parseDueDate – absolute dates ──────────────────────────────────────────
 
 describe("parseDueDate – absolute dates", () => {

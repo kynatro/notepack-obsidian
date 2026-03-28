@@ -78,6 +78,7 @@ const DUE_PATTERNS = [
   new RegExp(`\\bdue\\s+(?:by|on|at)\\s+(${DATE_CHUNK})`, "i"),
   new RegExp(`\\bdue\\s+(${DATE_CHUNK})`, "i"),
   new RegExp(`\\bby\\s+(${DATE_CHUNK})`, "i"),
+  new RegExp(`\\bon\\s+(${DATE_CHUNK})`, "i"),
 ];
 
 function startOfDay(d: Date): Date {
@@ -244,7 +245,7 @@ export function parseDateString(dateStr: string): Date {
 
 /**
  * Parse a due date from todo text.
- * Recognizes "due by X", "due on X", "due X", and "by X" followed by a date.
+ * Recognizes "due by X", "due on X", "due X", "by X", and "on X" followed by a date.
  * Pass a referenceDate to resolve relative keywords (today, tomorrow, next Friday)
  * relative to that date instead of the current date — use the file's date when available
  * so that a todo saying "by tomorrow" in an old note is flagged as overdue correctly.
