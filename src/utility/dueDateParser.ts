@@ -184,7 +184,7 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
     return new Date(ref.getFullYear() + 1, JANUARY, 1);
   }
 
-  // [next] weekday — bare weekday = next occurrence; "next" prefix skips one additional week
+  // [next] weekday — bare weekday = next occurrence; "next" prefix = that weekday in next calendar week
   const weekdayMatch = s.match(
     new RegExp(`^(next\\s+)?(${WEEKDAY_RE})$`)
   );
@@ -192,9 +192,15 @@ function parseAbsoluteDate(str: string, ref: Date, endOfDayHour: number, endOfWe
     const hasNext = !!weekdayMatch[1];
     const target = WEEKDAY_NAMES[weekdayMatch[2]];
     const today = startOfDay(ref);
+    if (hasNext) {
+      // "next <weekday>" — resolve to that weekday in the following calendar week
+      const daysUntilNextSunday = (DAYS_PER_WEEK - today.getDay()) % DAYS_PER_WEEK || DAYS_PER_WEEK;
+      const d = new Date(today);
+      d.setDate(today.getDate() + daysUntilNextSunday + target);
+      return d;
+    }
     let diff = target - today.getDay();
     if (diff <= 0) diff += DAYS_PER_WEEK;
-    if (hasNext) diff += DAYS_PER_WEEK;
     const d = new Date(today);
     d.setDate(d.getDate() + diff);
     return d;
@@ -274,6 +280,29 @@ export function getDueDateStatus(date: Date): "overdue" | "today" | "soon" | "fu
   }
   if (diff <= SOON_THRESHOLD_DAYS) return "soon";
   return "future";
+}
+
+/**
+ * Return the number of days a date is overdue (minimum 1).
+ * Returns null if the date is not overdue.
+ */
+export function getOverdueDays(date: Date): number | null {
+  const now = new Date();
+  const diff = daysDiff(date, now); // negative when date is in the past
+  if (diff < 0) return Math.max(1, Math.abs(diff));
+  if (diff === 0 && (date.getHours() !== 0 || date.getMinutes() !== 0) && date <= now) {
+    return 1;
+  }
+  return null;
+}
+
+/**
+ * Format an overdue duration for compact display (e.g. "3d", "2w", "1mo").
+ */
+export function formatOverdueDays(days: number): string {
+  if (days < 14) return `${days}d`;
+  if (days < 60) return `${Math.floor(days / 7)}w`;
+  return `${Math.floor(days / 30)}mo`;
 }
 
 /**

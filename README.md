@@ -44,7 +44,8 @@ Trigger phrases: `due by`, `due on`, `due at`, `due`, `by`
 | US date | `3/15`, `3/15/2026` |
 | Named month | `March 15`, `Mar 15, 2026` |
 | Relative | `today`, `tomorrow` |
-| Weekday | `Friday`, `next Monday` |
+| Weekday | `Friday` — nearest upcoming occurrence |
+| Next weekday | `next Monday` — that weekday in the following calendar week |
 | EOD | `EOD` — end of day at the configured hour |
 | EOD compound | `EOD Monday`, `EOD March 15`, `EOD tomorrow` |
 | EOW | `EOW`, `end of week` — last day of the configured work week at 23:59 |
@@ -164,7 +165,24 @@ npm run dev    # Watch mode (esbuild)
 npm run build  # Production build
 ```
 
-Copy `main.js`, `manifest.json`, and `styles.css` into your vault's `.obsidian/plugins/notepack/` folder.
+Copy `main.js`, `manifest.json`, and `styles.css` into your vault's `.obsidian/plugins/notepack/` folder. Alternatively, symlink the entire project to the `.obsidian/plugins` folder to take advantage of hot reloading in Obsidian with the [hot-reload](https://github.com/pjeby/hot-reload) plugin.
+
+### Releasing
+
+This project uses `dev` as the main branch and synchronizes `main` via a fast-forward merge when doing a release.
+
+#### Workflow
+
+1. Work out of branches for any feature or fix
+2. Prefix feature branches with `feature/` and fixes with `maint/`
+3. Create a PR with the branch work against `dev`
+4. Squash merge the PR when all checks have passed
+
+#### Cut a new release
+
+When `dev` is ready for a new release run `npm version` with the appropriate semver increase. You must run this command from the `dev` branch and the `dev` branch must not have any outstanding changes or be out of sync with `origin/dev`. If anything is out of order, you will be prompted to fix before being allowed to proceed.
+
+Running the `version` script will automatically make sure tests and build succeed, synchronize changes between `dev` and `master`, cut a new tag and push to `origin/dev`. From there the [`release`](./.github/workflows/release.yml) GitHub Action will take over and create a Release.
 
 ## License
 

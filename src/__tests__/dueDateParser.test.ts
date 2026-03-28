@@ -3,6 +3,8 @@ import {
   getDueDateStatus,
   formatDueDate,
   parseDateString,
+  getOverdueDays,
+  formatOverdueDays,
 } from "../utility/dueDateParser";
 
 // Fixed reference date: Thursday, March 5, 2026 at noon
@@ -178,8 +180,8 @@ describe("parseDueDate – weekdays (REF = Thursday Mar 5)", () => {
     expect(parseDueDate("due by monday", REF)).toEqual(d(2026, 3, 9));
   });
 
-  it("resolves 'next monday' to the Monday of the week after next from Thursday", () => {
-    expect(parseDueDate("due by next monday", REF)).toEqual(d(2026, 3, 16));
+  it("resolves 'next monday' to the Monday of next calendar week from Thursday", () => {
+    expect(parseDueDate("due by next monday", REF)).toEqual(d(2026, 3, 9));
   });
 
   it("resolves 'saturday' to 2 days ahead", () => {
@@ -704,5 +706,66 @@ describe("formatDueDate", () => {
     const result = formatDueDate(d(2026, 2, 1));
     expect(result).not.toMatch(/2026/);
     expect(result).toMatch(/Feb 1/);
+  });
+});
+
+// ─── getOverdueDays ──────────────────────────────────────────────────────────
+
+describe("getOverdueDays", () => {
+  it("returns null for a future date", () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 5);
+    expect(getOverdueDays(future)).toBeNull();
+  });
+
+  it("returns null for today (midnight)", () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    expect(getOverdueDays(today)).toBeNull();
+  });
+
+  it("returns the number of days overdue for a past date", () => {
+    const past = new Date();
+    past.setDate(past.getDate() - 5);
+    past.setHours(0, 0, 0, 0);
+    expect(getOverdueDays(past)).toBe(5);
+  });
+
+  it("returns minimum of 1 day for yesterday", () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+    expect(getOverdueDays(yesterday)).toBe(1);
+  });
+
+  it("returns 1 for an EOD time that has passed today", () => {
+    // Use a time-specific date from yesterday to guarantee it's in the past
+    const eod = new Date();
+    eod.setDate(eod.getDate() - 1);
+    eod.setHours(17, 0, 0, 0); // EOD yesterday with time component
+    const result = getOverdueDays(eod);
+    expect(result).toBe(1);
+  });
+});
+
+// ─── formatOverdueDays ───────────────────────────────────────────────────────
+
+describe("formatOverdueDays", () => {
+  it("formats days under 14 as days", () => {
+    expect(formatOverdueDays(1)).toBe("1d");
+    expect(formatOverdueDays(7)).toBe("7d");
+    expect(formatOverdueDays(13)).toBe("13d");
+  });
+
+  it("formats 14-59 days as weeks", () => {
+    expect(formatOverdueDays(14)).toBe("2w");
+    expect(formatOverdueDays(21)).toBe("3w");
+    expect(formatOverdueDays(59)).toBe("8w");
+  });
+
+  it("formats 60+ days as months", () => {
+    expect(formatOverdueDays(60)).toBe("2mo");
+    expect(formatOverdueDays(90)).toBe("3mo");
+    expect(formatOverdueDays(365)).toBe("12mo");
   });
 });
