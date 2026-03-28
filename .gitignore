@@ -1,8 +1,18 @@
+# OS files
 .DS_Store
+
+# Node
 node_modules/
-.claude/worktrees/
-main.js
-*.zip
+
+# Testing
 coverage
+
+# Obsidian files
 notepack-obsidian
 data.json
+main.js
+*.zip
+
+# Claude configuration
+.claude/worktrees/
+.claude/settings.local.json
